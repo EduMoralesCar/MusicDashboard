@@ -1,0 +1,69 @@
+#root {
+  /* keep full width; container inside App will control layout */
+}
+
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  /* keep default bootstrap card padding */
+}
+
+.artist-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: #fff;
+}
+.artist-thumb {
+  width: 110px;
+  height: 90px;
+  flex: 0 0 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.artist-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.placeholder-thumb { width:80px; height:70px; background: linear-gradient(90deg,#0f0f0f,#141414); border-radius:6px }
+
+.list-group-item { background: rgba(255,255,255,0.02); border: 0; }
+.list-group-numbered .list-group-item { border-left: 4px solid transparent; }
+
+@media (max-width: 768px) {
+  .artist-thumb { width:72px; height:64px }
+}
+
+.read-the-docs {
+  color: #888;
+}
