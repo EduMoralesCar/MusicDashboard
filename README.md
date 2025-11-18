@@ -12,7 +12,7 @@
     npm run dev
     ```
 
-¡Y listo! La aplicación estará corriendo en `http://localhost:5173`.
+¡Y listo! La aplicación estará corriendo en [http://localhost:5173](http://localhost:5173) 🌐
 
 # APIs externas usadas
 
