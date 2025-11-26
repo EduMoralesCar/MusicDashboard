@@ -17,14 +17,24 @@
 [![Last.fm](https://img.shields.io/badge/Last.fm-D51007?style=for-the-badge&logo=lastdotfm&logoColor=white)](https://www.last.fm/api)
 
 ---
-## Ejecución 
+# 🚀 Implementación local
 
-1.  **Instala las dependencias:**
+Sigue estos pasos para obtener una copia local del proyecto y ejecutarlo por primera vez:
+
+1. **Clona el repositorio:**
+    ```bash
+    git clone https://github.com/EduMoralesCar/MusicDashboard.git
+    cd MusicDashboard/
+    ```
+
+> **Nota:** Cada módulo tiene sus propios requisitos y pasos de instalación.  
+
+2.  **Instala las dependencias:**
     ```bash
     npm install
     ```
 
-2.  **Corre el proyecto:**
+3.  **Corre el proyecto:**
     ```bash
     npm run dev
     ```
@@ -63,7 +73,7 @@ Notas
 ---
 
 # Captura de Pantallas
-## Dashwoard Completo
+## MusicDashwoard Completo
 <img width="1906" height="922" alt="image" src="https://github.com/user-attachments/assets/4faa50cd-864c-4162-bb4f-9360f2c4c1a6" />
 
 ---
