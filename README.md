@@ -61,4 +61,25 @@ Notas
 - También puedo copiar esta sección al `README.md` raíz del proyecto si prefieres tener la referencia fuera del código.
 
 ---
-Generado automáticamente para tener las APIs a mano. Mantener actualizado cuando se añadan/quiten servicios externos.
+
+# Captura de Pantallas
+## Dashwoard Completo
+<img width="1906" height="922" alt="image" src="https://github.com/user-attachments/assets/4faa50cd-864c-4162-bb4f-9360f2c4c1a6" />
+
+---
+## Albums
+<img width="1023" height="921" alt="image" src="https://github.com/user-attachments/assets/6fea215a-4161-4276-ac88-778423c85f02" />
+
+---
+## Artista
+<img width="1027" height="857" alt="image" src="https://github.com/user-attachments/assets/9de4e01e-6ad0-4f64-8c42-9af729b01c05" />
+
+---
+## Top Albums
+<img width="811" height="854" alt="image" src="https://github.com/user-attachments/assets/8a69dab2-f534-4d4c-92f3-5b4ea7089b03" />
+
+---
+## Filtro de Busqueda por Artista
+<img width="1090" height="917" alt="image" src="https://github.com/user-attachments/assets/bcd12851-9be6-4368-875e-3241cf56dd3a" />
+
+---
