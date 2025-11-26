@@ -27,14 +27,20 @@ Sigue estos pasos para obtener una copia local del proyecto y ejecutarlo por pri
     cd MusicDashboard/
     ```
 
-> **Nota:** Cada módulo tiene sus propios requisitos y pasos de instalación.  
+2. Configura las Variables de Entorno creando un archivo .env.local
+   ```bash
+   # API Key de Last.fm
+   VITE_LASTFM_API_KEY=tu_api_key_de_Last.fm
+   ```
 
-2.  **Instala las dependencias:**
+  > **Nota:** Realizar los siguientes pasos una vez implementado el entorno local
+
+3.  **Instala las dependencias:**
     ```bash
     npm install
     ```
 
-3.  **Corre el proyecto:**
+4.  **Corre el proyecto:**
     ```bash
     npm run dev
     ```
