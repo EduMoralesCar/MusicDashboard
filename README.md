@@ -1,12 +1,23 @@
-# <p align="center">React + Vite</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB"/>
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=FFD62E"/>
+  <br/>
+  🎵 🎧 🎶
+</p>
 
-![Typing](https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&pause=1000&color=2F80ED&center=true&width=800&lines=Music+Dashboard+2025+%7C+React+y+Vite)
+![Typing](https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&pause=1000&color=2F80ED&center=true&width=800&lines=Music+Dashboard+2025+%7C+React,+Vite+y+API)
+
 
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
 [![VSCode](https://img.shields.io/badge/VSCode-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white)](https://code.visualstudio.com/)
+[![iTunes API](https://img.shields.io/badge/iTunes%20Search-000000?style=for-the-badge&logo=apple&logoColor=white)](https://itunes.apple.com/)
+[![MusicBrainz](https://img.shields.io/badge/MusicBrainz-BA478F?style=for-the-badge&logo=musicbrainz&logoColor=white)](https://musicbrainz.org/ws/2/)
+[![Cover Art Archive](https://img.shields.io/badge/Cover%20Art%20Archive-FF6600?style=for-the-badge&logo=archive&logoColor=white)](https://coverartarchive.org/)
+[![Last.fm](https://img.shields.io/badge/Last.fm-D51007?style=for-the-badge&logo=lastdotfm&logoColor=white)](https://www.last.fm/api)
 
+---
 ## Ejecución 
 
 1.  **Instala las dependencias:**
