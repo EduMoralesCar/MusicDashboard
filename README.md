@@ -32,10 +32,13 @@ Sigue estos pasos para obtener una copia local del proyecto y ejecutarlo por pri
    # API Key de Last.fm
    VITE_LASTFM_API_KEY=tu_api_key_de_Last.fm
    ```
-
-  > **Nota:** Realizar los siguientes pasos una vez implementado el entorno local
+   Registrate en la url: [https://www.last.fm/api/account/create](https://www.last.fm/api/account/create)
+   > Luego crea la API
+   <img width="1346" height="609" alt="image" src="https://github.com/user-attachments/assets/84d701ce-97b2-40f1-8d20-f0095b30393e" />
 
 3.  **Instala las dependencias:**
+    > **Nota:** Realizar los siguientes pasos una vez implementado el entorno local
+
     ```bash
     npm install
     ```
@@ -45,7 +48,9 @@ Sigue estos pasos para obtener una copia local del proyecto y ejecutarlo por pri
     npm run dev
     ```
 
-¡Y listo! La aplicación estará corriendo en [http://localhost:5173](http://localhost:5173) 🌐
+    ¡Y listo! La aplicación estará corriendo en [http://localhost:5173](http://localhost:5173) 🌐
+
+---
 
 # APIs externas usadas
 
