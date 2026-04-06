@@ -48,10 +48,10 @@ Sigue estos pasos para obtener una copia local del proyecto y ejecutarlo por pri
     npm run dev
     ```
 
-    ¡Y listo! La aplicación estará corriendo en [http://localhost:5173](http://localhost:5173) 🌐
+    ¡Y listo! La aplicación estará corriendo en [http://localhost:5173](http://localhost:5173) 
 
 5. MusicDashboard
-[Visita el proyecto aquí](https://musicdashboard-snowy.vercel.app/)
+   [Visita el proyecto aquí](https://musicdashboard-snowy.vercel.app/)🌐
 
 ---
 
