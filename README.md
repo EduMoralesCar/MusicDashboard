@@ -92,6 +92,6 @@ pnpm lint
 
 Si ya está desplegado, puedes visitar la versión en línea desde aquí:
 
-- [MusicDashboard](https://musicdashboard-snowy.vercel.app/)
+- [Wavify](https://music-dashboard-gamma.vercel.app/)
 
 ---
