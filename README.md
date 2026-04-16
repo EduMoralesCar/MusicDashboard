@@ -1,57 +1,58 @@
 <p align="center">
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white"/>
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB"/>
-  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=FFD62E"/>
-<img src="https://img.shields.io/badge/Bootstrap-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white"/>  <br/>
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white"/>
+  <br/>
   🎵 🎧 🎶
 </p>
 
 #
-![Typing](https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&pause=1000&color=2F80ED&center=true&width=800&lines=Music+Dashboard+2025+%7C+React,+Vite+y+API)
-
+![Typing](https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&pause=1000&color=2F80ED&center=true&width=900&lines=Wavify+%7C+Music+Dashboard+con+Next.js,+React+y+Audius)
 
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-F69220?style=for-the-badge&logo=pnpm&logoColor=white)](https://pnpm.io/)
 [![VSCode](https://img.shields.io/badge/VSCode-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white)](https://code.visualstudio.com/)
-[![iTunes API](https://img.shields.io/badge/iTunes%20Search-000000?style=for-the-badge&logo=apple&logoColor=white)](https://itunes.apple.com/)
-[![MusicBrainz](https://img.shields.io/badge/MusicBrainz-BA478F?style=for-the-badge&logo=musicbrainz&logoColor=white)](https://musicbrainz.org/ws/2/)
-[![Cover Art Archive](https://img.shields.io/badge/Cover%20Art%20Archive-FF6600?style=for-the-badge&logo=archive&logoColor=white)](https://coverartarchive.org/)
-[![Last.fm](https://img.shields.io/badge/Last.fm-D51007?style=for-the-badge&logo=lastdotfm&logoColor=white)](https://www.last.fm/api)
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Audius API](https://img.shields.io/badge/Audius-7C2BFF?style=for-the-badge&logo=musicbrainz&logoColor=white)](https://audius.co/)
 
 ---
+
 # 🚀 Implementación local
 
 Sigue estos pasos para obtener una copia local del proyecto y ejecutarlo por primera vez:
 
 1. **Clona el repositorio:**
-    ```bash
-    git clone https://github.com/EduMoralesCar/MusicDashboard.git
-    cd MusicDashboard/
-    ```
-
-2. Configura las Variables de Entorno creando un archivo .env.local
    ```bash
-   # API Key de Last.fm
-   VITE_LASTFM_API_KEY=tu_api_key_de_Last.fm
+   git clone https://github.com/EduMoralesCar/MusicDashboard.git
+   cd MusicDashboard/
    ```
-   Registrate en la url: [https://www.last.fm/api/account/create](https://www.last.fm/api/account/create)
-   > Luego crea la API
-   <img width="1346" height="609" alt="image" src="https://github.com/user-attachments/assets/84d701ce-97b2-40f1-8d20-f0095b30393e" />
 
-3.  **Instala las dependencias:**
-    > **Nota:** Realizar los siguientes pasos una vez implementado el entorno local
+2. **Instala las dependencias:**
+   ```bash
+   pnpm install
+   ```
 
-    ```bash
-    npm install
-    ```
+3. **Corre el proyecto:**
+   ```bash
+   pnpm dev
+   ```
 
-4.  **Corre el proyecto:**
-    ```bash
-    npm run dev
-    ```
+   ¡Y listo! La aplicación estará corriendo en **localhost:3000**.
 
-    ¡Y listo! La aplicación estará corriendo en **localhost:5173**
-5. MusicDashboard
+4. **Abre la app:**
+   Visita el proyecto local en [http://localhost:3000](http://localhost:3000).
 
-   Visita el proyecto completo en [MusicDashboard](https://musicdashboard-snowy.vercel.app/)🌐
+---
+
+# ¿Qué incluye?
+
+MusicDashboard, también llamado Wavify en la interfaz, es un dashboard musical estilo Spotify construido con Next.js 16, React 19 y Audius.
+
+- Home con tendencias semanales, música latina y selecciones underground.
+- Búsqueda de canciones y artistas con resultados en tiempo real.
+- Biblioteca con playlists trending.
+- Lista de canciones favoritas persistida en el navegador.
+- Reproductor con play, pause, siguiente, anterior, shuffle, repeat y control de volumen.
 
 ---
 
@@ -59,30 +60,38 @@ Sigue estos pasos para obtener una copia local del proyecto y ejecutarlo por pri
 
 Resumen rápido de las APIs externas que consume la aplicación y su propósito.
 
-- iTunes Search API
-  - Endpoint base: `https://itunes.apple.com/`
-  - Propósito: búsqueda de artistas, álbumes y pistas; fuente principal de previews (`previewUrl`) y artwork cuando está disponible.
-  - Wrappers en el proyecto: `src/api/itunes.js` (funciones exportadas en español: `buscarArtistas`, `obtenerAlbumesArtista`, `obtenerPistasAlbum`, `buscarCaratulaItunes`).
+- Audius API
+  - Endpoint base: `https://api.audius.co` y nodos de discovery de Audius.
+  - Propósito: búsqueda de tracks, usuarios y playlists, tendencias globales, reproducción de audio y metadata de artistas.
+  - Wrappers en el proyecto: `lib/audius.ts`.
 
-- MusicBrainz WS2
-  - Endpoint base: `https://musicbrainz.org/ws/2/`
-  - Propósito: buscar MBID de releases cuando necesitamos resolver un lanzamiento por artista+álbum (fallback para carátulas).
-  - Wrappers en el proyecto: `src/api/musicbrainz.js` (funciones en español: `buscarMBIDLanzamiento`, `obtenerCaratulaPorMBID`, `buscarCaratulaPorArtistaYAlbum`).
-
-- Cover Art Archive (CAA)
-  - Endpoint base: `https://coverartarchive.org/release/{MBID}`
-  - Propósito: devolver JSON con imágenes de release (thumbnails y URLs grandes). Usado por `musicbrainz.js` tras obtener el MBID.
-
-- Last.fm Web API
-  - Endpoint base: `https://ws.audioscrobbler.com/2.0/`
-  - Propósito: enriquecer metadata de pistas (por ejemplo `track.getInfo` para playcount, duración detallada o tags). Requiere clave API.
-  - Env required: colocar `VITE_LASTFM_API_KEY` en `.env.local` para usar `src/api/lastfm.js`.
-  - Wrapper en el proyecto: `src/api/lastfm.js` (función actual: `getTrackInfo`).
+- Audius Discovery Provider
+  - Endpoint base: `https://discoveryprovider.audius.co`.
+  - Propósito: fallback cuando no se puede resolver un host público desde `api.audius.co`.
+  - Uso: gestionado internamente por `lib/audius.ts`.
 
 Notas
-- MusicBrainz y CAA son servicios relacionados (MBID -> CAA), pero técnicamente son endpoints diferentes y por eso se listan por separado.
-- Si quieres cambiar nombres públicos de funciones (`getTrackInfo` → `obtenerInfoPista`) puedo traducirlos y actualizar imports en todo el proyecto.
-- También puedo copiar esta sección al `README.md` raíz del proyecto si prefieres tener la referencia fuera del código.
+- Este proyecto no requiere variables de entorno para correr en local.
+- Las imágenes y previews dependen de la disponibilidad pública de Audius.
+- Si quieres, también puedo agregar una sección de capturas de pantalla o desplegarlo con tu URL final de Vercel.
 
 ---
 
+# Scripts disponibles
+
+```bash
+pnpm dev
+pnpm build
+pnpm start
+pnpm lint
+```
+
+---
+
+# Demo
+
+Si ya está desplegado, puedes visitar la versión en línea desde aquí:
+
+- [MusicDashboard](https://musicdashboard-snowy.vercel.app/)
+
+---
