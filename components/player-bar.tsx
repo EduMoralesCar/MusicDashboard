@@ -17,9 +17,11 @@ import {
   ListMusic,
   Laptop2,
   Maximize2,
+  Tv,
 } from "lucide-react"
 import { usePlayer } from "./player-provider"
 import { useLiked } from "./liked-provider"
+import { useNavigation } from "./navigation-provider"
 import { formatDuration } from "@/lib/audius"
 import { cn } from "@/lib/utils"
 
@@ -34,6 +36,7 @@ export function PlayerBar() {
     isMuted,
     shuffle,
     repeat,
+    showVideo,
     togglePlay,
     next,
     previous,
@@ -42,8 +45,10 @@ export function PlayerBar() {
     toggleMute,
     toggleShuffle,
     cycleRepeat,
+    toggleVideo,
   } = usePlayer()
 
+  const { view, navigateTo, goBack } = useNavigation()
   const { isLiked, toggleLike } = useLiked()
   const liked = currentTrack ? isLiked(currentTrack.id) : false
   const cover =
@@ -164,8 +169,19 @@ export function PlayerBar() {
       {/* Right: volume & misc */}
       <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
         <button
-          aria-label="Lyrics"
-          className="hidden text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
+          onClick={() => {
+            if (view === "lyrics") {
+              goBack()
+            } else {
+              navigateTo("lyrics")
+            }
+          }}
+          disabled={!currentTrack}
+          aria-label="Letras"
+          className={cn(
+            "text-muted-foreground transition-colors hover:text-foreground inline-flex disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer",
+            view === "lyrics" ? "text-primary hover:text-[#1ed760]" : "text-muted-foreground hover:text-foreground"
+          )}
         >
           <Mic2 className="h-4 w-4" />
         </button>
@@ -197,6 +213,17 @@ export function PlayerBar() {
           </button>
           <VolumeSlider value={isMuted ? 0 : volume * 100} onChange={(v) => setVolume(v / 100)} />
         </div>
+        <button
+          onClick={toggleVideo}
+          disabled={!currentTrack}
+          aria-label="Toggle Video Clip"
+          className={cn(
+            "hidden text-muted-foreground transition-colors hover:text-foreground md:inline-flex",
+            showVideo ? "text-primary hover:text-[#1ed760]" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Tv className="h-4 w-4" />
+        </button>
         <button
           aria-label="Fullscreen"
           className="hidden text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
