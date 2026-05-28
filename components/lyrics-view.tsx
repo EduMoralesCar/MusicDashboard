@@ -1,0 +1,151 @@
+"use client"
+
+import { useEffect, useRef, useState, useMemo } from "react"
+import { usePlayer } from "./player-provider"
+import { getSyncedLyrics, LyricLine } from "@/lib/lyrics"
+import { Music4, Mic2, AlertCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
+
+export function LyricsView() {
+  const { currentTrack, progress, seek, isPlaying } = usePlayer()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const lineRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  // Get synced lyrics for the current playing track
+  const lyrics = useMemo<LyricLine[]>(() => {
+    if (!currentTrack) return []
+    const artistName = currentTrack.user?.name || ""
+    return getSyncedLyrics(currentTrack.title, artistName)
+  }, [currentTrack])
+
+  // Find the index of the currently active line
+  const activeIndex = useMemo(() => {
+    if (lyrics.length === 0) return -1
+    // Find the latest line where time <= progress
+    let active = -1
+    for (let i = 0; i < lyrics.length; i++) {
+      if (progress >= lyrics[i].time) {
+        active = i
+      } else {
+        break
+      }
+    }
+    return active
+  }, [lyrics, progress])
+
+  // Smoothly scroll the active lyric line to the center of the viewport
+  useEffect(() => {
+    if (activeIndex >= 0 && lineRefs.current[activeIndex]) {
+      lineRefs.current[activeIndex]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      })
+    }
+  }, [activeIndex])
+
+  // Generate a dynamic gradient background based on the artist name length
+  const backgroundGradient = useMemo(() => {
+    if (!currentTrack) return "from-neutral-900 to-black"
+    const hash = (currentTrack.user?.name || "").length % 4
+    if (hash === 0) return "from-[#3e0b1d] via-[#120308] to-[#000000]" // deep crimson
+    if (hash === 1) return "from-[#082a17] via-[#020d07] to-[#000000]" // deep emerald
+    if (hash === 2) return "from-[#081d2a] via-[#020a0d] to-[#000000]" // deep ocean blue
+    return "from-[#22073e] via-[#0c0216] to-[#000000]" // deep purple
+  }, [currentTrack])
+
+  if (!currentTrack) {
+    return (
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-4 text-center text-neutral-400">
+        <Mic2 className="h-16 w-16 text-neutral-600 animate-pulse" />
+        <h2 className="text-2xl font-bold text-white">Letras Sincronizadas</h2>
+        <p className="max-w-md text-sm text-neutral-500">
+          Reproduce una canción comercial oficial de tus artistas favoritos y presiona el micrófono para ver la letra cantada al compás de la música.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={cn(
+        "relative -mx-6 -mt-6 flex min-h-[90vh] flex-col bg-gradient-to-b px-6 py-12 transition-all duration-1000",
+        backgroundGradient
+      )}
+    >
+      <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
+        {/* Album header info */}
+        <div className="mb-8 flex items-center gap-4 border-b border-white/5 pb-6">
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-neutral-900 shadow-lg">
+            {currentTrack.artwork?.["150x150"] ? (
+              <img
+                src={currentTrack.artwork["150x150"]}
+                alt={currentTrack.title}
+                className="h-full w-full object-cover animate-in fade-in duration-300"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-neutral-600">
+                <Music4 className="h-6 w-6" />
+              </div>
+            )}
+          </div>
+          <div>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#1db954]">
+              Reproduciendo
+            </span>
+            <h1 className="text-xl font-bold text-white line-clamp-1">{currentTrack.title}</h1>
+            <p className="text-sm font-semibold text-neutral-400 mt-0.5">
+              {currentTrack.user?.name}
+            </p>
+          </div>
+        </div>
+
+        {/* Scrollable lyrics area */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto pr-4 scrollbar-thin select-none max-h-[60vh] py-12"
+          style={{ maskImage: "linear-gradient(to bottom, transparent, white 20%, white 80%, transparent)" }}
+        >
+          <div className="flex flex-col gap-6 py-20">
+            {lyrics.map((line, idx) => {
+              const isActive = idx === activeIndex
+              const isPast = idx < activeIndex
+              
+              return (
+                <button
+                  key={idx}
+                  ref={(el) => {
+                    lineRefs.current[idx] = el
+                  }}
+                  onClick={() => seek(line.time)}
+                  className={cn(
+                    "w-full text-left text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight transition-all duration-300 py-1.5 focus:outline-none cursor-pointer origin-left hover:scale-[1.01] hover:text-white",
+                    isActive
+                      ? "text-[#1db954] scale-[1.03] drop-shadow-[0_0_15px_rgba(29,185,84,0.3)] opacity-100"
+                      : isPast
+                      ? "text-white/80 opacity-80"
+                      : "text-white/30 opacity-40"
+                  )}
+                >
+                  {line.text}
+                </button>
+              )
+            })}
+
+            {lyrics.length === 0 && (
+              <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-neutral-500">
+                <AlertCircle className="h-10 w-10 text-neutral-600" />
+                <p>No se encontraron letras sincronizadas para esta canción.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sync hint */}
+        <div className="mt-8 text-center text-xs font-semibold tracking-wider text-neutral-500 uppercase flex items-center justify-center gap-1.5 border-t border-white/5 pt-6">
+          <Mic2 className="h-3.5 w-3.5 text-[#1db954]" />
+          Haz clic en cualquier verso para saltar directamente a ese momento de la canción
+        </div>
+      </div>
+    </div>
+  )
+}
