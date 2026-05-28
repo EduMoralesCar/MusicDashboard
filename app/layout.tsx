@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Wavify — Music for everyone',
-  description: 'A Spotify-style music dashboard powered by the Audius API.',
+  title: 'Eumora Music — Tu música favorita',
+  description: 'Un clon de Spotify premium libre y sin anuncios, potenciado por la API de Audius.',
   generator: 'v0.app',
   icons: {
     icon: [

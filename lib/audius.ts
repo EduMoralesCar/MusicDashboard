@@ -1,5 +1,4 @@
-// Audius API client - free, no auth required, full-length streaming
-// Docs: https://docs.audius.org/developers/api
+import { getLocalStreamUrl } from "./latam-hits"
 
 const APP_NAME = "SpotifyCloneV0"
 
@@ -138,6 +137,22 @@ export async function getPlaylistTracks(playlistId: string): Promise<AudiusTrack
  * CDN mp3, which the HTML <audio> element follows automatically.
  */
 export async function getStreamUrl(trackId: string): Promise<string> {
+  if (trackId.startsWith("deezer_")) {
+    try {
+      const numericId = trackId.replace("deezer_", "")
+      const res = await fetch(`/api/deezer/stream?id=${numericId}`)
+      if (res.ok) {
+        const json = await res.json()
+        if (json.url) return json.url
+      }
+    } catch (err) {
+      console.error("Error fetching Deezer stream proxy:", err)
+    }
+  }
+  if (trackId.startsWith("latam_")) {
+    const localUrl = getLocalStreamUrl(trackId)
+    if (localUrl) return localUrl
+  }
   const host = await getHost()
   return `${host}/v1/tracks/${trackId}/stream?app_name=${APP_NAME}`
 }

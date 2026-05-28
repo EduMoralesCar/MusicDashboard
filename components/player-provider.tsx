@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from "react"
 import type { AudiusTrack } from "@/lib/audius"
-import { getStreamUrl } from "@/lib/audius"
+import { cn } from "@/lib/utils"
 
 interface PlayerContextValue {
   currentTrack: AudiusTrack | null
@@ -15,6 +15,7 @@ interface PlayerContextValue {
   isMuted: boolean
   shuffle: boolean
   repeat: "off" | "all" | "one"
+  showVideo: boolean
   playTrack: (track: AudiusTrack, queue?: AudiusTrack[]) => void
   togglePlay: () => void
   next: () => void
@@ -24,12 +25,19 @@ interface PlayerContextValue {
   toggleMute: () => void
   toggleShuffle: () => void
   cycleRepeat: () => void
+  toggleVideo: () => void
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null)
 
+declare global {
+  interface Window {
+    onYouTubeIframeAPIReady?: () => void
+    YT?: any
+  }
+}
+
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [currentTrack, setCurrentTrack] = useState<AudiusTrack | null>(null)
   const [queue, setQueue] = useState<AudiusTrack[]>([])
   const [isPlaying, setIsPlaying] = useState(false)
@@ -40,76 +48,166 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [isMuted, setIsMuted] = useState(false)
   const [shuffle, setShuffle] = useState(false)
   const [repeat, setRepeat] = useState<"off" | "all" | "one">("off")
+  const [showVideo, setShowVideo] = useState(false)
 
-  // Initialize audio element
+  const playerRef = useRef<any>(null)
+  const progressIntervalRef = useRef<any>(null)
+  const isApiLoadedRef = useRef(false)
+
+  // 1. Initialize YouTube Player API script dynamically
   useEffect(() => {
     if (typeof window === "undefined") return
-    const audio = new Audio()
-    audio.preload = "auto"
-    audioRef.current = audio
 
-    const onTimeUpdate = () => setProgress(audio.currentTime)
-    const onLoadedMetadata = () => setDuration(audio.duration || 0)
-    const onPlay = () => setIsPlaying(true)
-    const onPause = () => setIsPlaying(false)
-    const onWaiting = () => setIsLoading(true)
-    const onPlaying = () => setIsLoading(false)
-    const onCanPlay = () => setIsLoading(false)
+    // Callback when API is ready
+    window.onYouTubeIframeAPIReady = () => {
+      initializePlayer()
+    }
 
-    audio.addEventListener("timeupdate", onTimeUpdate)
-    audio.addEventListener("loadedmetadata", onLoadedMetadata)
-    audio.addEventListener("play", onPlay)
-    audio.addEventListener("pause", onPause)
-    audio.addEventListener("waiting", onWaiting)
-    audio.addEventListener("playing", onPlaying)
-    audio.addEventListener("canplay", onCanPlay)
+    if (!window.YT) {
+      const tag = document.createElement("script")
+      tag.src = "https://www.youtube.com/iframe_api"
+      const firstScriptTag = document.getElementsByTagName("script")[0]
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
+    } else {
+      initializePlayer()
+    }
 
     return () => {
-      audio.pause()
-      audio.removeEventListener("timeupdate", onTimeUpdate)
-      audio.removeEventListener("loadedmetadata", onLoadedMetadata)
-      audio.removeEventListener("play", onPlay)
-      audio.removeEventListener("pause", onPause)
-      audio.removeEventListener("waiting", onWaiting)
-      audio.removeEventListener("playing", onPlaying)
-      audio.removeEventListener("canplay", onCanPlay)
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current)
     }
   }, [])
 
-  // Sync volume
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume
+  // Helper to initialize the player once the API is loaded
+  const initializePlayer = () => {
+    if (playerRef.current || !window.YT) return
+
+    playerRef.current = new window.YT.Player("yt-player", {
+      height: "100%",
+      width: "100%",
+      videoId: "",
+      playerVars: {
+        playsinline: 1,
+        controls: 0, // hide standard youtube controls
+        disablekb: 1,
+        fs: 0,
+        rel: 0,
+        modestbranding: 1,
+      },
+      events: {
+        onReady: (event: any) => {
+          // Set initial volume
+          event.target.setVolume(volume * 100)
+          if (isMuted) event.target.mute()
+        },
+        onStateChange: (event: any) => {
+          // Handle play, pause, end states
+          // window.YT.PlayerState.PLAYING = 1
+          // window.YT.PlayerState.PAUSED = 2
+          // window.YT.PlayerState.ENDED = 0
+          // window.YT.PlayerState.BUFFERING = 3
+          
+          const state = event.data
+          if (state === 1) {
+            setIsPlaying(true)
+            setIsLoading(false)
+            startProgressTracker()
+          } else if (state === 2) {
+            setIsPlaying(false)
+            stopProgressTracker()
+          } else if (state === 3) {
+            setIsLoading(true)
+          } else if (state === 0) {
+            setIsPlaying(false)
+            stopProgressTracker()
+            handleTrackEnded()
+          }
+        },
+        onError: (err: any) => {
+          console.error("YouTube Player Error:", err)
+          setIsLoading(false)
+          setIsPlaying(false)
+        }
+      }
+    })
+  }
+
+  // Tracking playback progress
+  const startProgressTracker = () => {
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current)
+    progressIntervalRef.current = setInterval(() => {
+      const player = playerRef.current
+      if (player && typeof player.getCurrentTime === "function") {
+        setProgress(player.getCurrentTime())
+        setDuration(player.getDuration() || 0)
+      }
+    }, 500)
+  }
+
+  const stopProgressTracker = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current)
+      progressIntervalRef.current = null
     }
-  }, [volume, isMuted])
+  }
 
+  // Play a track: Searches YouTube first, then loads video!
   const playTrack = useCallback((track: AudiusTrack, newQueue?: AudiusTrack[]) => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    setCurrentTrack(track)
     if (newQueue && newQueue.length > 0) {
       setQueue(newQueue)
     }
+    
+    setCurrentTrack(track)
     setIsLoading(true)
+    setIsPlaying(false)
     setProgress(0)
+    setDuration(0)
 
-    getStreamUrl(track.id).then((url) => {
-      audio.src = url
-      audio.play().catch((err) => {
-        console.log("[v0] Playback error:", err?.message)
-        setIsLoading(false)
+    // Generate query: e.g. "Bad Bunny - Ojitos Lindos"
+    const artistName = track.user?.name || ""
+    const query = `${artistName} ${track.title}`
+
+    // Fetch video ID from our server-side YouTube search proxy
+    fetch(`/api/youtube?q=${encodeURIComponent(query)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Video search failed")
+        return res.json()
       })
-    })
-  }, [])
+      .then((data) => {
+        if (!data.videoId) throw new Error("No video ID returned")
+        
+        const player = playerRef.current
+        if (player && typeof player.loadVideoById === "function") {
+          player.loadVideoById(data.videoId)
+          player.playVideo()
+        } else {
+          // If player isn't fully ready yet, try to reinitialize
+          initializePlayer()
+          // Fallback to reload after a brief timeout
+          setTimeout(() => {
+            const p = playerRef.current
+            if (p && typeof p.loadVideoById === "function") {
+              p.loadVideoById(data.videoId)
+              p.playVideo()
+            }
+          }, 1000)
+        }
+      })
+      .catch((err) => {
+        console.error("Playback error:", err.message)
+        setIsLoading(false)
+        setIsPlaying(false)
+      })
+  }, [volume, isMuted])
 
   const togglePlay = useCallback(() => {
-    const audio = audioRef.current
-    if (!audio || !currentTrack) return
-    if (audio.paused) {
-      audio.play().catch((e) => console.log("[v0] play err", e?.message))
+    const player = playerRef.current
+    if (!player || !currentTrack) return
+
+    const state = player.getPlayerState()
+    if (state === 1) {
+      player.pauseVideo()
     } else {
-      audio.pause()
+      player.playVideo()
     }
   }, [currentTrack])
 
@@ -138,48 +236,68 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, [getNextIndex, playTrack, queue])
 
   const previous = useCallback(() => {
-    const audio = audioRef.current
-    if (audio && audio.currentTime > 3) {
-      audio.currentTime = 0
+    const player = playerRef.current
+    if (player && typeof player.getCurrentTime === "function" && player.getCurrentTime() > 3) {
+      player.seekTo(0, true)
+      setProgress(0)
       return
     }
     const i = getNextIndex(-1)
     if (i >= 0) playTrack(queue[i])
   }, [getNextIndex, playTrack, queue])
 
-  // Handle track end
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-    const onEnded = () => {
-      if (repeat === "one") {
-        audio.currentTime = 0
-        audio.play().catch(() => {})
-      } else {
-        next()
+  const handleTrackEnded = () => {
+    if (repeat === "one") {
+      const player = playerRef.current
+      if (player && typeof player.seekTo === "function") {
+        player.seekTo(0, true)
+        player.playVideo()
       }
+    } else {
+      next()
     }
-    audio.addEventListener("ended", onEnded)
-    return () => audio.removeEventListener("ended", onEnded)
-  }, [next, repeat])
+  }
 
+  // Volume & controls handlers
   const seek = useCallback((seconds: number) => {
-    const audio = audioRef.current
-    if (!audio) return
-    audio.currentTime = seconds
+    const player = playerRef.current
+    if (!player || typeof player.seekTo !== "function") return
+    player.seekTo(seconds, true)
     setProgress(seconds)
   }, [])
 
   const setVolume = useCallback((v: number) => {
     setVolumeState(v)
-    if (v > 0) setIsMuted(false)
+    const player = playerRef.current
+    if (player && typeof player.setVolume === "function") {
+      player.setVolume(v * 100)
+    }
+    if (v > 0) {
+      setIsMuted(false)
+      if (player && typeof player.unMute === "function") player.unMute()
+    }
   }, [])
 
-  const toggleMute = useCallback(() => setIsMuted((m) => !m), [])
+  const toggleMute = useCallback(() => {
+    setIsMuted((m) => {
+      const newMuted = !m
+      const player = playerRef.current
+      if (player) {
+        if (newMuted && typeof player.mute === "function") player.mute()
+        if (!newMuted && typeof player.unMute === "function") {
+          player.unMute()
+          player.setVolume(volume * 100)
+        }
+      }
+      return newMuted
+    })
+  }, [volume])
+
   const toggleShuffle = useCallback(() => setShuffle((s) => !s), [])
   const cycleRepeat = useCallback(() => {
     setRepeat((r) => (r === "off" ? "all" : r === "all" ? "one" : "off"))
   }, [])
+  const toggleVideo = useCallback(() => setShowVideo((v) => !v), [])
 
   const value = useMemo<PlayerContextValue>(
     () => ({
@@ -193,6 +311,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       isMuted,
       shuffle,
       repeat,
+      showVideo,
       playTrack,
       togglePlay,
       next,
@@ -202,6 +321,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       toggleMute,
       toggleShuffle,
       cycleRepeat,
+      toggleVideo,
     }),
     [
       currentTrack,
@@ -214,6 +334,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       isMuted,
       shuffle,
       repeat,
+      showVideo,
       playTrack,
       togglePlay,
       next,
@@ -223,10 +344,26 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       toggleMute,
       toggleShuffle,
       cycleRepeat,
+      toggleVideo,
     ],
   )
 
-  return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>
+  return (
+    <PlayerContext.Provider value={value}>
+      {children}
+      {/* Premium Video Container - floating element bottom-left corner */}
+      <div
+        className={cn(
+          "fixed bottom-24 left-4 z-40 overflow-hidden rounded-xl border border-neutral-800 bg-black shadow-2xl transition-all duration-500",
+          showVideo && currentTrack
+            ? "h-[135px] w-[240px] opacity-100 translate-y-0 scale-100"
+            : "h-0 w-0 opacity-0 translate-y-4 scale-95 pointer-events-none"
+        )}
+      >
+        <div id="yt-player" className="h-full w-full rounded-xl pointer-events-none" />
+      </div>
+    </PlayerContext.Provider>
+  )
 }
 
 export function usePlayer() {
