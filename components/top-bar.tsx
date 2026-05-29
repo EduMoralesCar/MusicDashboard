@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { ChevronLeft, ChevronRight, User, LogOut, ChevronDown } from "lucide-react"
+import { ChevronLeft, ChevronRight, User, LogOut, ChevronDown, Settings } from "lucide-react"
 import { useAuth } from "./auth-provider"
 import { useNavigation } from "./navigation-provider"
 
 export function TopBar() {
   const { user, logout } = useAuth()
-  const { goBack, canGoBack } = useNavigation()
+  const { goBack, canGoBack, navigateTo } = useNavigation()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -60,9 +60,17 @@ export function TopBar() {
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2 rounded-full bg-black hover:bg-[#282828] p-1 pr-3 text-sm font-semibold transition-all focus:outline-none"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1db954] text-black font-extrabold text-xs">
-                {avatarLetter}
-              </div>
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.username}
+                  className="h-7 w-7 rounded-full object-cover shrink-0"
+                />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1db954] text-black font-extrabold text-xs shrink-0">
+                  {avatarLetter}
+                </div>
+              )}
               <span className="max-w-[120px] truncate text-white hidden sm:block">
                 {user.username}
               </span>
@@ -80,9 +88,19 @@ export function TopBar() {
                 <button
                   onClick={() => {
                     setDropdownOpen(false)
+                    navigateTo("settings")
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-neutral-300 font-semibold hover:bg-neutral-800 hover:text-white transition-colors text-left mt-1.5 cursor-pointer"
+                >
+                  <Settings className="h-4 w-4" />
+                  Configuración
+                </button>
+                <button
+                  onClick={() => {
+                    setDropdownOpen(false)
                     logout()
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-red-400 font-semibold hover:bg-neutral-800 hover:text-red-300 transition-colors text-left mt-1.5"
+                  className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-red-400 font-semibold hover:bg-neutral-800 hover:text-red-300 transition-colors text-left mt-1 cursor-pointer"
                 >
                   <LogOut className="h-4 w-4" />
                   Cerrar Sesión

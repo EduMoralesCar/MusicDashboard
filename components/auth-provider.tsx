@@ -8,6 +8,8 @@ interface User {
   email: string
   isVerified: boolean
   likedTracks: string[]
+  avatar?: string
+  followedArtists?: any[]
 }
 
 interface AuthContextValue {
