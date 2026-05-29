@@ -75,25 +75,25 @@ export async function GET(request: Request) {
       const getFallbackData = () => {
         const lowercaseType = type.toLowerCase()
         if (lowercaseType === "reggaeton") {
-          return LATAM_HITS.filter(t => t.genre.toLowerCase().includes("reggaeton") || t.genre.toLowerCase().includes("urbano"))
+          return LATAM_HITS.filter(t => (t.genre || "").toLowerCase().includes("reggaeton") || (t.genre || "").toLowerCase().includes("urbano"))
         }
         if (lowercaseType === "rock") {
-          return LATAM_HITS.filter(t => t.genre.toLowerCase().includes("rock"))
+          return LATAM_HITS.filter(t => (t.genre || "").toLowerCase().includes("rock"))
         }
         if (lowercaseType === "pop") {
-          return LATAM_HITS.filter(t => t.genre.toLowerCase().includes("pop"))
+          return LATAM_HITS.filter(t => (t.genre || "").toLowerCase().includes("pop"))
         }
         if (lowercaseType === "mexico") {
-          return LATAM_HITS.filter(t => t.genre.toLowerCase().includes("mexico") || t.genre.toLowerCase().includes("mariachi"))
+          return LATAM_HITS.filter(t => (t.genre || "").toLowerCase().includes("mexico") || (t.genre || "").toLowerCase().includes("mariachi"))
         }
         if (lowercaseType === "colombia") {
-          return LATAM_HITS.filter(t => t.genre.toLowerCase().includes("colombia"))
+          return LATAM_HITS.filter(t => (t.genre || "").toLowerCase().includes("colombia"))
         }
         if (lowercaseType === "argentina") {
-          return LATAM_HITS.filter(t => t.genre.toLowerCase().includes("argentina"))
+          return LATAM_HITS.filter(t => (t.genre || "").toLowerCase().includes("argentina"))
         }
         if (lowercaseType === "peru") {
-          return LATAM_HITS.filter(t => t.genre.toLowerCase().includes("peru") || t.user.name.toLowerCase().includes("marco"))
+          return LATAM_HITS.filter(t => (t.genre || "").toLowerCase().includes("peru") || (t.user?.name || "").toLowerCase().includes("marco"))
         }
         return LATAM_HITS
       }
