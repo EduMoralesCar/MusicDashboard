@@ -21,15 +21,7 @@ export function LibraryView() {
     fetchPlaylists
   )
 
-  // Curated list of major artists in followed library
-  const followedArtists = [
-    { id: "deezer_artist_4697334", name: "Bad Bunny", photo: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=200&q=80", followers: "78M" },
-    { id: "deezer_artist_4493015", name: "KAROL G", photo: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&q=80", followers: "45M" },
-    { id: "deezer_artist_10583404", name: "Feid", photo: "https://images.unsplash.com/photo-1487180142328-0c4e37023af5?w=200&q=80", followers: "24M" },
-    { id: "deezer_artist_412", name: "Soda Stereo", photo: "https://images.unsplash.com/photo-1482440308425-276ad0f28b19?w=200&q=80", followers: "12M" },
-    { id: "deezer_artist_78502", name: "Gian Marco", photo: "https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?w=200&q=80", followers: "3M" },
-    { id: "deezer_artist_1251", name: "Juanes", photo: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&q=80", followers: "15M" },
-  ]
+  // Dynamic playlists and follow lists loaded from Mongo
 
   if (isLoading) {
     return (
@@ -60,7 +52,7 @@ export function LibraryView() {
               <Heart className="h-7 w-7 text-indigo-600" fill="currentColor" />
             </div>
             <div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-white leading-none">Canciones que te gustan</h2>
+              <h2 className="text-3xl font-extrabold tracking-tight text-white leading-none">Tus me gusta</h2>
               <p className="mt-3 text-sm font-semibold text-indigo-200">
                 {liked.length} canción{liked.length === 1 ? "" : "s"} favorita{liked.length === 1 ? "" : "s"} guardada{liked.length === 1 ? "" : "s"}
               </p>
@@ -79,7 +71,13 @@ export function LibraryView() {
                 className="group cursor-pointer rounded-lg border border-neutral-900 bg-[#181818]/60 p-4 transition-all hover:bg-neutral-800/80 active:scale-[0.98]"
               >
                 <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-md bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-800 shadow-md text-[#1db954] flex items-center justify-center">
-                  {hasCover ? (
+                  {p.artwork ? (
+                    <img
+                      src={p.artwork}
+                      alt={p.name}
+                      className="h-full w-full object-cover shadow-md transition-transform duration-300 group-hover:scale-103"
+                    />
+                  ) : hasCover ? (
                     <img
                       src={p.tracks[0].artwork["150x150"]}
                       alt={p.name}
@@ -105,29 +103,46 @@ export function LibraryView() {
       {/* Followed/Featured Artists Section */}
       <section className="flex flex-col gap-4 mt-4">
         <h2 className="text-2xl font-bold tracking-tight">Artistas que sigues</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {followedArtists.map((artist) => (
-            <div
-              key={artist.id}
-              onClick={() => navigateToArtist(artist.id, artist.name)}
-              className="group cursor-pointer rounded-lg border border-neutral-900/60 bg-[#181818]/60 p-4 transition-all hover:bg-neutral-800/80 active:scale-[0.98]"
+        
+        {user && user.followedArtists && user.followedArtists.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {user.followedArtists.map((artist: any) => (
+              <div
+                key={artist.id}
+                onClick={() => navigateToArtist(artist.id, artist.name)}
+                className="group cursor-pointer rounded-lg border border-neutral-900/60 bg-[#181818]/60 p-4 transition-all hover:bg-neutral-800/80 active:scale-[0.98]"
+              >
+                <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-full bg-neutral-900 shadow-md">
+                  <img
+                    src={artist.photo || "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=200&q=80"}
+                    alt={artist.name}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-103"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="truncate text-sm font-bold text-white group-hover:text-[#1db954] transition-colors">{artist.name}</h3>
+                  <p className="mt-0.5 truncate text-xs text-neutral-400 font-semibold">
+                    Artista
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-neutral-800 bg-[#181818]/30 px-6 py-12 text-center shadow-lg">
+            <User className="mx-auto h-12 w-12 text-neutral-600 mb-4" />
+            <h3 className="text-lg font-bold text-white mb-1">Tu biblioteca de artistas está vacía</h3>
+            <p className="text-xs text-neutral-400 max-w-sm mx-auto mb-4">
+              Busca tus artistas favoritos y haz clic en el botón de "Seguir" para agregarlos a tu biblioteca personalizada.
+            </p>
+            <button
+              onClick={() => navigateTo("search")}
+              className="rounded-full bg-white text-black px-6 py-2 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer"
             >
-              <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-full bg-neutral-900 shadow-md">
-                <img
-                  src={artist.photo}
-                  alt={artist.name}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-103"
-                />
-              </div>
-              <div className="min-w-0">
-                <h3 className="truncate text-sm font-bold text-white group-hover:text-[#1db954] transition-colors">{artist.name}</h3>
-                <p className="mt-0.5 truncate text-xs text-neutral-400 font-semibold">
-                  {artist.followers} de oyentes · Artista
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+              Ir a Buscar Artistas
+            </button>
+          </div>
+        )}
       </section>
     </div>
   )

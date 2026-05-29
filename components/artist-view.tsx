@@ -1,10 +1,13 @@
 "use client"
 
 import useSWR from "swr"
-import { Play, Pause, Disc, ArrowLeft, Loader2, Award, Calendar } from "lucide-react"
+import { useState } from "react"
+import { Play, Pause, Disc, ArrowLeft, Loader2, Award, Calendar, MoreHorizontal, Shuffle } from "lucide-react"
 import { TrackRow } from "./track-row"
 import { usePlayer } from "./player-provider"
 import { useNavigation } from "./navigation-provider"
+import { useAuth } from "./auth-provider"
+import { toast } from "sonner"
 import type { AudiusTrack } from "@/lib/audius"
 import { SkeletonCard, SkeletonRow } from "./skeletons"
 
@@ -19,8 +22,11 @@ const fetchDetails = (url: string) => fetch(url).then(res => res.json()).then(da
 const fetchList = (url: string) => fetch(url).then(res => res.json()).then(data => data.data)
 
 export function ArtistView({ artistId, onViewChange, onActiveIdChange }: ArtistViewProps) {
-  const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayer()
+  const { user, refreshUser } = useAuth()
+  const { currentTrack, isPlaying, playTrack, togglePlay, shuffle, toggleShuffle } = usePlayer()
   const { goBack } = useNavigation()
+
+  const [isUpdatingFollow, setIsUpdatingFollow] = useState(false)
 
   // Extract the numeric ID from deezer_artist_XXX
   const numericId = artistId.replace("deezer_artist_", "").replace("artist_", "")
@@ -111,11 +117,11 @@ export function ArtistView({ artistId, onViewChange, onActiveIdChange }: ArtistV
       </div>
 
       {/* Control Buttons */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
         <button
           onClick={handlePlayArtist}
           disabled={!topTracks || topTracks.length === 0}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-black shadow-lg hover:scale-105 hover:bg-[#1ed760] transition-all duration-300 disabled:opacity-50"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-black shadow-lg hover:scale-105 hover:bg-[#1ed760] transition-all duration-300 disabled:opacity-50 cursor-pointer"
         >
           {isCurrentPlaying ? (
             <Pause className="h-7 w-7" fill="currentColor" />
@@ -123,6 +129,90 @@ export function ArtistView({ artistId, onViewChange, onActiveIdChange }: ArtistV
             <Play className="h-7 w-7 translate-x-[1px]" fill="currentColor" />
           )}
         </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (!topTracks || topTracks.length === 0) return
+            toggleShuffle()
+            if (!shuffle) {
+              const randomTrack = topTracks[Math.floor(Math.random() * topTracks.length)]
+              playTrack(randomTrack, topTracks.slice(0, 20))
+            } else {
+              playTrack(topTracks[0], topTracks.slice(0, 20))
+            }
+          }}
+          disabled={!topTracks || topTracks.length === 0}
+          className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer ${
+            shuffle
+              ? "bg-[#1db954] border-[#1db954] text-black shadow-md animate-in fade-in"
+              : "bg-transparent border-neutral-700 text-neutral-400 hover:text-white hover:border-white"
+          }`}
+          aria-label="Escuchar aleatorio"
+        >
+          <Shuffle className="h-4.5 w-4.5" />
+        </button>
+
+        {user && (
+          <button
+            type="button"
+            onClick={async (e) => {
+              e.preventDefault()
+              if (isUpdatingFollow) return
+              setIsUpdatingFollow(true)
+              const isFollowed = user.followedArtists?.some((a: any) => a.id === artistId) || false
+              try {
+                const res = await fetch("/api/auth/follow-artist", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    artistId,
+                    name: artist.name,
+                    photo: artist.picture || "",
+                    action: isFollowed ? "unfollow" : "follow",
+                  }),
+                })
+
+                if (res.ok) {
+                  await refreshUser()
+                  toast.success(isFollowed ? `Dejaste de seguir a ${artist.name}.` : `¡Ahora sigues a ${artist.name}!`)
+                } else {
+                  const data = await res.json()
+                  toast.error(data.error || "Error al actualizar la biblioteca.")
+                }
+              } catch (err) {
+                toast.error("Error de conexión al servidor.")
+              } finally {
+                setIsUpdatingFollow(false)
+              }
+            }}
+            disabled={isUpdatingFollow}
+            className={`rounded-full border px-6 py-2 text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer ${
+              user.followedArtists?.some((a: any) => a.id === artistId)
+                ? "bg-transparent text-white border-neutral-500 hover:border-white"
+                : "bg-white text-black border-white hover:bg-neutral-100"
+            }`}
+          >
+            {isUpdatingFollow ? (
+              <div className="h-4 w-12 flex items-center justify-center">
+                <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+              </div>
+            ) : user.followedArtists?.some((a: any) => a.id === artistId) ? (
+              "Siguiendo"
+            ) : (
+              "Seguir"
+            )}
+          </button>
+        )}
+
+        {user && (
+          <button
+            className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:text-white transition-colors cursor-pointer"
+            aria-label="Más opciones"
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Top Tracks */}

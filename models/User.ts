@@ -10,10 +10,13 @@ export interface IUser extends Document {
   resetCode?: string
   resetCodeExpires?: Date
   likedTracks: any[] // Array of Liked Tracks
+  avatar?: string // Base64 or image URL
+  followedArtists: any[] // Array of Followed Artists
   playlists: {
     _id: string
     name: string
     description: string
+    artwork?: string
     tracks: any[]
   }[]
   createdAt: Date
@@ -57,7 +60,15 @@ const UserSchema: Schema<IUser> = new Schema(
       type: Date,
     },
     likedTracks: {
-      type: [Schema.Types.Mixed],
+      type: [Schema.Types.Mixed] as any,
+      default: [],
+    },
+    avatar: {
+      type: String,
+      default: "",
+    },
+    followedArtists: {
+      type: [Schema.Types.Mixed] as any,
       default: [],
     },
     playlists: {
@@ -65,6 +76,7 @@ const UserSchema: Schema<IUser> = new Schema(
         {
           name: { type: String, required: true },
           description: { type: String, default: "" },
+          artwork: { type: String, default: "" },
           tracks: { type: [Schema.Types.Mixed], default: [] },
         },
       ],

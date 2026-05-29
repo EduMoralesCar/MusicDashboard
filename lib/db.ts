@@ -18,10 +18,10 @@ declare global {
   var mongooseGlobal: MongooseGlobal | undefined
 }
 
-let cached = global.mongooseGlobal
+let cached: MongooseGlobal = global.mongooseGlobal || { conn: null, promise: null }
 
-if (!cached) {
-  cached = global.mongooseGlobal = { conn: null, promise: null }
+if (!global.mongooseGlobal) {
+  global.mongooseGlobal = cached
 }
 
 export async function connectToDatabase() {

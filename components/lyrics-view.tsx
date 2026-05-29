@@ -1,26 +1,31 @@
 "use client"
 
-import { useEffect, useRef, useState, useMemo } from "react"
+import { useEffect, useRef, useMemo } from "react"
 import { usePlayer } from "./player-provider"
-import { getSyncedLyrics, LyricLine } from "@/lib/lyrics"
-import { Music4, Mic2, AlertCircle } from "lucide-react"
+import type { LyricLine } from "@/lib/lyrics"
+import { Music4, Mic2, AlertCircle, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import useSWR from "swr"
 
 export function LyricsView() {
   const { currentTrack, progress, seek, isPlaying } = usePlayer()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const lineRefs = useRef<(HTMLButtonElement | null)[]>([])
 
-  // Get synced lyrics for the current playing track
-  const lyrics = useMemo<LyricLine[]>(() => {
-    if (!currentTrack) return []
-    const artistName = currentTrack.user?.name || ""
-    return getSyncedLyrics(currentTrack.title, artistName)
-  }, [currentTrack])
+  // Fetch synced lyrics dynamically from LRCLIB API with automatic cache revalidation
+  const { data, isLoading } = useSWR<{ isSynced: boolean; lyrics: LyricLine[] }>(
+    currentTrack
+      ? `/api/lyrics?track=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.user?.name || "")}`
+      : null,
+    (url: string) => fetch(url).then((res) => res.json())
+  )
+
+  const isSynced = data?.isSynced ?? true
+  const lyrics = data?.lyrics ?? []
 
   // Find the index of the currently active line
   const activeIndex = useMemo(() => {
-    if (lyrics.length === 0) return -1
+    if (!isSynced || lyrics.length === 0) return -1
     // Find the latest line where time <= progress
     let active = -1
     for (let i = 0; i < lyrics.length; i++) {
@@ -31,17 +36,17 @@ export function LyricsView() {
       }
     }
     return active
-  }, [lyrics, progress])
+  }, [lyrics, progress, isSynced])
 
   // Smoothly scroll the active lyric line to the center of the viewport
   useEffect(() => {
-    if (activeIndex >= 0 && lineRefs.current[activeIndex]) {
+    if (isSynced && activeIndex >= 0 && lineRefs.current[activeIndex]) {
       lineRefs.current[activeIndex]?.scrollIntoView({
         behavior: "smooth",
         block: "center",
       })
     }
-  }, [activeIndex])
+  }, [activeIndex, isSynced])
 
   // Generate a dynamic gradient background based on the artist name length
   const backgroundGradient = useMemo(() => {
@@ -60,6 +65,18 @@ export function LyricsView() {
         <h2 className="text-2xl font-bold text-white">Letras Sincronizadas</h2>
         <p className="max-w-md text-sm text-neutral-500">
           Reproduce una canción comercial oficial de tus artistas favoritos y presiona el micrófono para ver la letra cantada al compás de la música.
+        </p>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-4 text-center text-neutral-400">
+        <Loader2 className="h-12 w-12 animate-spin text-[#1db954]" />
+        <h2 className="text-2xl font-bold text-white">Sincronizando letras...</h2>
+        <p className="max-w-md text-sm text-neutral-500">
+          Estamos buscando las letras en vivo y sincronizándolas con el audio de la canción...
         </p>
       </div>
     )
@@ -110,6 +127,17 @@ export function LyricsView() {
               const isActive = idx === activeIndex
               const isPast = idx < activeIndex
               
+              if (!isSynced) {
+                return (
+                  <div
+                    key={idx}
+                    className="w-full text-left text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight py-2 text-white/90 selection:bg-[#1db954]/30 selection:text-white"
+                  >
+                    {line.text}
+                  </div>
+                )
+              }
+
               return (
                 <button
                   key={idx}
@@ -134,7 +162,7 @@ export function LyricsView() {
             {lyrics.length === 0 && (
               <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-neutral-500">
                 <AlertCircle className="h-10 w-10 text-neutral-600" />
-                <p>No se encontraron letras sincronizadas para esta canción.</p>
+                <p>No se encontraron letras para esta canción.</p>
               </div>
             )}
           </div>
@@ -143,7 +171,9 @@ export function LyricsView() {
         {/* Sync hint */}
         <div className="mt-8 text-center text-xs font-semibold tracking-wider text-neutral-500 uppercase flex items-center justify-center gap-1.5 border-t border-white/5 pt-6">
           <Mic2 className="h-3.5 w-3.5 text-[#1db954]" />
-          Haz clic en cualquier verso para saltar directamente a ese momento de la canción
+          {isSynced
+            ? "Haz clic en cualquier verso para saltar directamente a ese momento de la canción"
+            : "Letras estáticas proporcionadas en vivo por LRCLIB"}
         </div>
       </div>
     </div>

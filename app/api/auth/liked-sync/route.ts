@@ -30,17 +30,17 @@ export async function POST(request: Request) {
 
     await connectToDatabase()
 
-    const user = await User.findById(payload.userId)
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Usuario no encontrado." },
-        { status: 404 }
-      )
-    }
-
     // Option A: Sync the entire array of track objects from local storage
     if (likedTracks && Array.isArray(likedTracks)) {
+      const user = await User.findById(payload.userId)
+
+      if (!user) {
+        return NextResponse.json(
+          { error: "Usuario no encontrado." },
+          { status: 404 }
+        )
+      }
+
       // Merge unique tracks by id
       const existingMap = new Map()
       // First, add existing database tracks
@@ -54,26 +54,51 @@ export async function POST(request: Request) {
         if (t && t.id) existingMap.set(t.id, t)
       })
 
-      user.likedTracks = Array.from(existingMap.values())
-      await user.save()
+      const mergedTracks = Array.from(existingMap.values())
+
+      // Use findOneAndUpdate instead of save() to avoid concurrency VersionError (OCC)
+      const updatedUser = await User.findOneAndUpdate(
+        { _id: payload.userId },
+        { $set: { likedTracks: mergedTracks } },
+        { new: true }
+      )
+
+      if (!updatedUser) {
+        return NextResponse.json(
+          { error: "Usuario no encontrado al actualizar." },
+          { status: 404 }
+        )
+      }
 
       return NextResponse.json(
-        { message: "Lista de favoritos sincronizada con éxito.", likedTracks: user.likedTracks },
+        { message: "Lista de favoritos sincronizada con éxito.", likedTracks: updatedUser.likedTracks },
         { status: 200 }
       )
     }
 
     // Option B: Add or remove a single track object
     if (track && track.id) {
+      let updatedUser
+
       if (action === "add") {
-        const exists = user.likedTracks.some((t: any) => t && t.id === track.id)
-        if (!exists) {
-          user.likedTracks.push(track)
-          await user.save()
+        // Use atomic push only if track.id is not already in likedTracks
+        updatedUser = await User.findOneAndUpdate(
+          { _id: payload.userId, "likedTracks.id": { $ne: track.id } },
+          { $push: { likedTracks: track } },
+          { new: true }
+        )
+
+        // If updatedUser is null, it means it already exists, so we just get the current document
+        if (!updatedUser) {
+          updatedUser = await User.findById(payload.userId)
         }
       } else if (action === "remove") {
-        user.likedTracks = user.likedTracks.filter((t: any) => t && t.id !== track.id)
-        await user.save()
+        // Use atomic pull to remove track by id
+        updatedUser = await User.findOneAndUpdate(
+          { _id: payload.userId },
+          { $pull: { likedTracks: { id: track.id } } },
+          { new: true }
+        )
       } else {
         return NextResponse.json(
           { error: "Acción no válida. Utiliza 'add' o 'remove'." },
@@ -81,8 +106,15 @@ export async function POST(request: Request) {
         )
       }
 
+      if (!updatedUser) {
+        return NextResponse.json(
+          { error: "Usuario no encontrado." },
+          { status: 404 }
+        )
+      }
+
       return NextResponse.json(
-        { message: `Canción ${action === "add" ? "añadida a" : "eliminada de"} favoritos.`, likedTracks: user.likedTracks },
+        { message: `Canción ${action === "add" ? "añadida a" : "eliminada de"} favoritos.`, likedTracks: updatedUser.likedTracks },
         { status: 200 }
       )
     }
