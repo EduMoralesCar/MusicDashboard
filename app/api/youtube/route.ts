@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     // Regular expression to match video IDs from watch links in the HTML
     // We look for watch?v=XXXXXXXXXXX which are standard video IDs
     const regex = /\/watch\?v=([a-zA-Z0-9_-]{11})/g
-    const matches = []
+    const matches: string[] = []
     let match
 
     // Collect the first few video IDs
