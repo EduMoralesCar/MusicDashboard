@@ -15,6 +15,7 @@ import { ArtistView } from "@/components/artist-view"
 import { AlbumView } from "@/components/album-view"
 import { PlaylistView } from "@/components/playlist-view"
 import { LyricsView } from "@/components/lyrics-view"
+import { SettingsView } from "@/components/settings-view"
 
 function InnerPage() {
   const { view, activeId, navigateTo, navigateToArtist, navigateToAlbum } = useNavigation()
@@ -31,6 +32,7 @@ function InnerPage() {
             {view === "library" && <LibraryView />}
             {view === "liked" && <LikedSongsView />}
             {view === "lyrics" && <LyricsView />}
+            {view === "settings" && <SettingsView />}
             
             {/* Dynamic Interactive Spotify Detail Views */}
             {view === "artist" && activeId && (

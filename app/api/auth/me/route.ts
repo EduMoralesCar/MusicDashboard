@@ -43,6 +43,8 @@ export async function GET() {
           email: user.email,
           isVerified: user.isVerified,
           likedTracks: user.likedTracks || [],
+          avatar: user.avatar || "",
+          followedArtists: user.followedArtists || [],
         },
       },
       { status: 200 }

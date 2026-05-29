@@ -26,6 +26,9 @@ interface PlayerContextValue {
   toggleShuffle: () => void
   cycleRepeat: () => void
   toggleVideo: () => void
+  sleepTimerDuration: number | null
+  sleepTimerRemaining: number | null
+  setSleepTimer: (minutes: number | null) => void
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null)
@@ -49,10 +52,45 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [shuffle, setShuffle] = useState(false)
   const [repeat, setRepeat] = useState<"off" | "all" | "one">("off")
   const [showVideo, setShowVideo] = useState(false)
+  const [sleepTimerDuration, setSleepTimerDuration] = useState<number | null>(null)
+  const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number | null>(null)
 
   const playerRef = useRef<any>(null)
   const progressIntervalRef = useRef<any>(null)
   const isApiLoadedRef = useRef(false)
+  const handleTrackEndedRef = useRef<() => void>(() => {})
+
+  const setSleepTimer = useCallback((minutes: number | null) => {
+    if (minutes === null) {
+      setSleepTimerDuration(null)
+      setSleepTimerRemaining(null)
+    } else {
+      setSleepTimerDuration(minutes)
+      setSleepTimerRemaining(minutes * 60)
+    }
+  }, [])
+
+  // Count down sleep timer
+  useEffect(() => {
+    if (sleepTimerRemaining === null) return
+
+    if (sleepTimerRemaining <= 0) {
+      const player = playerRef.current
+      if (player && typeof player.pauseVideo === "function") {
+        player.pauseVideo()
+      }
+      setIsPlaying(false)
+      setSleepTimerDuration(null)
+      setSleepTimerRemaining(null)
+      return
+    }
+
+    const timer = setTimeout(() => {
+      setSleepTimerRemaining((prev) => (prev !== null ? prev - 1 : null))
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [sleepTimerRemaining])
 
   // 1. Initialize YouTube Player API script dynamically
   useEffect(() => {
@@ -119,7 +157,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           } else if (state === 0) {
             setIsPlaying(false)
             stopProgressTracker()
-            handleTrackEnded()
+            handleTrackEndedRef.current?.()
           }
         },
         onError: (err: any) => {
@@ -258,6 +296,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Update handleTrackEndedRef on every render to prevent stale closure bug
+  useEffect(() => {
+    handleTrackEndedRef.current = handleTrackEnded
+  })
+
   // Volume & controls handlers
   const seek = useCallback((seconds: number) => {
     const player = playerRef.current
@@ -322,6 +365,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       toggleShuffle,
       cycleRepeat,
       toggleVideo,
+      sleepTimerDuration,
+      sleepTimerRemaining,
+      setSleepTimer,
     }),
     [
       currentTrack,
@@ -345,6 +391,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       toggleShuffle,
       cycleRepeat,
       toggleVideo,
+      sleepTimerDuration,
+      sleepTimerRemaining,
+      setSleepTimer,
     ],
   )
 
