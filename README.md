@@ -39,6 +39,9 @@ El proyecto utiliza una arquitectura moderna y escalable que se conecta a MongoD
 ### 🎵 Reproductor de Música Premium
 - **Música Completa y Oficial:** Escucha canciones comerciales originales completas mediante el reproductor de YouTube sincronizado en segundo plano, en lugar de demos recortadas.
 - **Modo Video Clip ("Videoclip Flotante"):** Un elegante panel flotante expandible y colapsable en la barra lateral inferior que reproduce el videoclip oficial de YouTube en sincronía con el reproductor de música.
+- **Letras Sincronizadas (Scroll Interactivo):** Panel interactivo con letras sincronizadas en tiempo real que se desplazan de forma automática. Cuenta con sistema *click-to-seek* para saltar a cualquier segundo de la canción haciendo clic sobre su verso.
+- **Rediseño & Fallbacks HD:** Inicio dinámico con biblioteca de usuario personalizada y sistema inteligente de fallbacks en alta resolución para imágenes de portadas y perfiles.
+
 
 ### ☁️ Playlists y Personalización en la Nube
 - **Gestión de Playlists (CRUD):** Crea playlists personalizadas en tiempo real desde la barra lateral.
