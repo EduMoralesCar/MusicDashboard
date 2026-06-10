@@ -68,7 +68,10 @@ export function FullscreenView() {
       return
     }
 
+    let active = true
+
     const updateDimensions = () => {
+      if (!active) return
       if (videoPlaceholderRef.current) {
         const rect = videoPlaceholderRef.current.getBoundingClientRect()
         setVideoDimensions({
@@ -80,21 +83,22 @@ export function FullscreenView() {
       }
     }
 
-    const timeoutId = setTimeout(updateDimensions, 150)
-
-    const resizeObserver = new ResizeObserver(() => {
+    // Run frame-perfect tracking loop in fullscreen view
+    const tick = () => {
+      if (!active) return
       updateDimensions()
-    })
-
-    if (videoPlaceholderRef.current) {
-      resizeObserver.observe(videoPlaceholderRef.current)
+      requestAnimationFrame(tick)
     }
 
+    // Start loop
+    tick()
+
+    window.addEventListener("scroll", updateDimensions, true)
     window.addEventListener("resize", updateDimensions)
 
     return () => {
-      clearTimeout(timeoutId)
-      resizeObserver.disconnect()
+      active = false
+      window.removeEventListener("scroll", updateDimensions, true)
       window.removeEventListener("resize", updateDimensions)
       setVideoDimensions(null)
     }
