@@ -13,7 +13,10 @@ export function VideoView() {
 
   // Track and report video dimensions to the player provider when active
   useEffect(() => {
+    let active = true
+
     const updateDimensions = () => {
+      if (!active) return
       if (videoPlaceholderRef.current) {
         const rect = videoPlaceholderRef.current.getBoundingClientRect()
         setVideoDimensions({
@@ -25,22 +28,22 @@ export function VideoView() {
       }
     }
 
-    // Run initial update after a short timeout to let layout settle
-    const timeoutId = setTimeout(updateDimensions, 100)
-
-    const resizeObserver = new ResizeObserver(() => {
+    // Run a frame-perfect tracking loop during view lifecycle
+    const tick = () => {
+      if (!active) return
       updateDimensions()
-    })
-
-    if (videoPlaceholderRef.current) {
-      resizeObserver.observe(videoPlaceholderRef.current)
+      requestAnimationFrame(tick)
     }
 
+    // Start loop
+    tick()
+
+    window.addEventListener("scroll", updateDimensions, true)
     window.addEventListener("resize", updateDimensions)
 
     return () => {
-      clearTimeout(timeoutId)
-      resizeObserver.disconnect()
+      active = false
+      window.removeEventListener("scroll", updateDimensions, true)
       window.removeEventListener("resize", updateDimensions)
       setVideoDimensions(null)
     }
