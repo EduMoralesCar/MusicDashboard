@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Music2, Mail, Lock, User as UserIcon, ShieldCheck, ArrowLeft, Loader2, KeyRound } from "lucide-react"
+import { Music2, Mail, Lock, User as UserIcon, ShieldCheck, ArrowLeft, Loader2, KeyRound, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 
 type AuthState = "login" | "register" | "verify" | "forgot" | "reset"
@@ -21,6 +21,60 @@ export default function AuthPage() {
   
   // Track email for verification flow
   const [flowEmail, setFlowEmail] = useState("")
+
+  // Password visibility states
+  const [showPassword, setShowPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [resending, setResending] = useState(false)
+
+  // Clear states when transitioning views to prevent carry-over of stale codes or passwords
+  const changeState = (newState: AuthState) => {
+    setState(newState)
+    setCode("")
+    setPassword("")
+    setNewPassword("")
+    setShowPassword(false)
+    setShowNewPassword(false)
+    setResending(false)
+  }
+
+  // Redirect if flowEmail is lost (e.g., page reload or manual URL access)
+  useEffect(() => {
+    if (state === "reset" && !flowEmail) {
+      changeState("forgot")
+    } else if (state === "verify" && !flowEmail) {
+      changeState("login")
+    }
+  }, [state, flowEmail])
+
+  const handleResendOtp = async () => {
+    if (!flowEmail) {
+      toast.error("No hay un correo electrónico registrado para el envío.")
+      return
+    }
+
+    setResending(true)
+    try {
+      const res = await fetch("/api/auth/resend-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: flowEmail }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast.error(data.error || "Error al reenviar el código.")
+        return
+      }
+
+      toast.success(data.message || "Código reenviado con éxito.")
+    } catch (err) {
+      toast.error("Error de conexión al reenviar el código.")
+    } finally {
+      setResending(false)
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,7 +97,7 @@ export default function AuthPage() {
         if (data.requiresVerification) {
           toast.warning(data.error)
           setFlowEmail(data.email)
-          setState("verify")
+          changeState("verify")
         } else {
           toast.error(data.error || "Error al iniciar sesión.")
         }
@@ -94,7 +148,7 @@ export default function AuthPage() {
 
       toast.success(data.message)
       setFlowEmail(email)
-      setState("verify")
+      changeState("verify")
     } catch (err) {
       toast.error("Error de conexión con el servidor.")
     } finally {
@@ -158,7 +212,7 @@ export default function AuthPage() {
 
       toast.success(data.message)
       setFlowEmail(email)
-      setState("reset")
+      changeState("reset")
     } catch (err) {
       toast.error("Error de conexión con el servidor.")
     } finally {
@@ -224,7 +278,7 @@ export default function AuthPage() {
             {state === "register" && "Crea tu cuenta gratuita para comenzar tu experiencia"}
             {state === "verify" && `Ingresa el código OTP enviado a ${flowEmail}`}
             {state === "forgot" && "Recupera el acceso a tu biblioteca de música"}
-            {state === "reset" && "Ingresa el código de recuperación y tu nueva clave"}
+            {state === "reset" && `Ingresa el código de recuperación enviado a ${flowEmail} y tu nueva clave`}
           </p>
         </div>
 
@@ -253,7 +307,7 @@ export default function AuthPage() {
                   <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Contraseña</label>
                   <button
                     type="button"
-                    onClick={() => setState("forgot")}
+                    onClick={() => changeState("forgot")}
                     className="text-xs font-semibold text-[#1db954] hover:underline"
                   >
                     ¿Olvidaste tu contraseña?
@@ -262,13 +316,24 @@ export default function AuthPage() {
                 <div className="relative">
                   <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-neutral-500" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-lg border border-neutral-800 bg-[#121214] py-3 pr-4 pl-10 text-sm text-white placeholder-neutral-500 outline-none transition-all focus:border-[#1db954] focus:ring-1 focus:ring-[#1db954]"
+                    className="w-full rounded-lg border border-neutral-800 bg-[#121214] py-3 pr-10 pl-10 text-sm text-white placeholder-neutral-500 outline-none transition-all focus:border-[#1db954] focus:ring-1 focus:ring-[#1db954]"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -284,7 +349,7 @@ export default function AuthPage() {
                 ¿No tienes una cuenta?{" "}
                 <button
                   type="button"
-                  onClick={() => setState("register")}
+                  onClick={() => changeState("register")}
                   className="font-bold text-white hover:text-[#1db954] hover:underline"
                 >
                   Regístrate gratis
@@ -331,13 +396,24 @@ export default function AuthPage() {
                 <div className="relative">
                   <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-neutral-500" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Minimo 6 caracteres"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-lg border border-neutral-800 bg-[#121214] py-3 pr-4 pl-10 text-sm text-white placeholder-neutral-500 outline-none transition-all focus:border-[#1db954] focus:ring-1 focus:ring-[#1db954]"
+                    className="w-full rounded-lg border border-neutral-800 bg-[#121214] py-3 pr-10 pl-10 text-sm text-white placeholder-neutral-500 outline-none transition-all focus:border-[#1db954] focus:ring-1 focus:ring-[#1db954]"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -353,7 +429,7 @@ export default function AuthPage() {
                 ¿Ya tienes una cuenta?{" "}
                 <button
                   type="button"
-                  onClick={() => setState("login")}
+                  onClick={() => changeState("login")}
                   className="font-bold text-white hover:text-[#1db954] hover:underline"
                 >
                   Inicia sesión
@@ -367,7 +443,7 @@ export default function AuthPage() {
             <form onSubmit={handleVerify} className="flex flex-col gap-5">
               <button
                 type="button"
-                onClick={() => setState("register")}
+                onClick={() => changeState("register")}
                 className="flex items-center gap-2 text-xs font-semibold text-neutral-400 hover:text-white"
               >
                 <ArrowLeft className="h-4 w-4" /> Volver al registro
@@ -399,6 +475,18 @@ export default function AuthPage() {
               >
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verificar e Ingresar"}
               </button>
+
+              <div className="mt-2 text-center text-sm text-neutral-400">
+                ¿No recibiste el código?{" "}
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resending || loading}
+                  className="font-bold text-white hover:text-[#1db954] hover:underline disabled:opacity-50 transition-all"
+                >
+                  {resending ? "Reenviando..." : "Reenviar código"}
+                </button>
+              </div>
             </form>
           )}
 
@@ -407,7 +495,7 @@ export default function AuthPage() {
             <form onSubmit={handleForgot} className="flex flex-col gap-5">
               <button
                 type="button"
-                onClick={() => setState("login")}
+                onClick={() => changeState("login")}
                 className="flex items-center gap-2 text-xs font-semibold text-neutral-400 hover:text-white"
               >
                 <ArrowLeft className="h-4 w-4" /> Volver a iniciar sesión
@@ -443,7 +531,7 @@ export default function AuthPage() {
             <form onSubmit={handleReset} className="flex flex-col gap-5">
               <button
                 type="button"
-                onClick={() => setState("forgot")}
+                onClick={() => changeState("forgot")}
                 className="flex items-center gap-2 text-xs font-semibold text-neutral-400 hover:text-white"
               >
                 <ArrowLeft className="h-4 w-4" /> Cambiar correo
@@ -470,13 +558,24 @@ export default function AuthPage() {
                 <div className="relative">
                   <KeyRound className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-neutral-500" />
                   <input
-                    type="password"
+                    type={showNewPassword ? "text" : "password"}
                     placeholder="Mínimo 6 caracteres"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-lg border border-neutral-800 bg-[#121214] py-3 pr-4 pl-10 text-sm text-white placeholder-neutral-500 outline-none transition-all focus:border-[#1db954] focus:ring-1 focus:ring-[#1db954]"
+                    className="w-full rounded-lg border border-neutral-800 bg-[#121214] py-3 pr-10 pl-10 text-sm text-white placeholder-neutral-500 outline-none transition-all focus:border-[#1db954] focus:ring-1 focus:ring-[#1db954]"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition-colors"
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
               </div>
 
