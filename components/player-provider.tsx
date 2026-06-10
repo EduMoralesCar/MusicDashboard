@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from "react"
 import type { AudiusTrack } from "@/lib/audius"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 interface PlayerContextValue {
   currentTrack: AudiusTrack | null
@@ -59,6 +60,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const progressIntervalRef = useRef<any>(null)
   const isApiLoadedRef = useRef(false)
   const handleTrackEndedRef = useRef<() => void>(() => {})
+  const currentVideoIdsRef = useRef<string[]>([])
+  const currentVideoIdIndexRef = useRef<number>(0)
+  const handlePlayerErrorRef = useRef<(err: any) => void>(() => {})
 
   const setSleepTimer = useCallback((minutes: number | null) => {
     if (minutes === null) {
@@ -162,8 +166,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         },
         onError: (err: any) => {
           console.error("YouTube Player Error:", err)
-          setIsLoading(false)
-          setIsPlaying(false)
+          handlePlayerErrorRef.current?.(err)
         }
       }
     })
@@ -213,6 +216,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       .then((data) => {
         if (!data.videoId) throw new Error("No video ID returned")
         
+        currentVideoIdsRef.current = data.videoIds || [data.videoId]
+        currentVideoIdIndexRef.current = 0
+
         const player = playerRef.current
         if (player && typeof player.loadVideoById === "function") {
           player.loadVideoById(data.videoId)
@@ -296,9 +302,33 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Update handleTrackEndedRef on every render to prevent stale closure bug
+  const handlePlayerError = (err: any) => {
+    const nextIndex = currentVideoIdIndexRef.current + 1
+    if (nextIndex < currentVideoIdsRef.current.length) {
+      const nextVideoId = currentVideoIdsRef.current[nextIndex]
+      currentVideoIdIndexRef.current = nextIndex
+      console.log(`🔄 Retrying with alternative video ID (${nextIndex + 1}/${currentVideoIdsRef.current.length}): ${nextVideoId}`)
+      toast("Este video está restringido. Intentando con otra fuente...")
+      
+      const player = playerRef.current
+      if (player && typeof player.loadVideoById === "function") {
+        setIsLoading(true)
+        player.loadVideoById(nextVideoId)
+        player.playVideo()
+      }
+    } else {
+      console.error("❌ All alternative YouTube video IDs failed to play.")
+      setIsLoading(false)
+      setIsPlaying(false)
+      toast.error("No se pudo reproducir este tema. Pasando al siguiente...")
+      next()
+    }
+  }
+
+  // Update refs on every render to prevent stale closure bug
   useEffect(() => {
     handleTrackEndedRef.current = handleTrackEnded
+    handlePlayerErrorRef.current = handlePlayerError
   })
 
   // Volume & controls handlers
