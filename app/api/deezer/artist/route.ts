@@ -28,6 +28,9 @@ function mapDeezerTracks(tracks: any[]) {
   }))
 }
 
+const memoryCache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_TTL = 12 * 60 * 60 * 1000 // 12 hours
+
 export async function GET(request: Request) {
   const headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -42,6 +45,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Missing artist ID" }, { status: 400 })
     }
 
+    const cacheKey = `${id}_${type}`
+
+    // Check memory cache
+    const cached = memoryCache.get(cacheKey)
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+      return NextResponse.json(cached.data)
+    }
+
     let url = `https://api.deezer.com/artist/${id}`
     
     if (type === "top") {
@@ -52,7 +63,7 @@ export async function GET(request: Request) {
 
     const res = await fetch(url, {
       headers,
-      next: { revalidate: 3600 } // cache for 1 hour
+      next: { revalidate: 86400 } // cache for 1 day
     })
 
     if (!res.ok) {
@@ -62,7 +73,7 @@ export async function GET(request: Request) {
     const data = await res.json()
 
     if (type === "details") {
-      return NextResponse.json({
+      const result = {
         artist: {
           id: `deezer_artist_${data.id}`,
           name: data.name,
@@ -70,9 +81,13 @@ export async function GET(request: Request) {
           followers: data.nb_fan,
           albumsCount: data.nb_album,
         }
-      })
+      }
+      memoryCache.set(cacheKey, { data: result, timestamp: Date.now() })
+      return NextResponse.json(result)
     } else if (type === "top") {
-      return NextResponse.json({ data: mapDeezerTracks(data.data || []) })
+      const result = { data: mapDeezerTracks(data.data || []) }
+      memoryCache.set(cacheKey, { data: result, timestamp: Date.now() })
+      return NextResponse.json(result)
     } else if (type === "albums") {
       // Map albums
       const mappedAlbums = (data.data || []).map((album: any) => ({
@@ -82,7 +97,9 @@ export async function GET(request: Request) {
         release_date: album.release_date,
         genre: "Album"
       }))
-      return NextResponse.json({ data: mappedAlbums })
+      const result = { data: mappedAlbums }
+      memoryCache.set(cacheKey, { data: result, timestamp: Date.now() })
+      return NextResponse.json(result)
     }
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 })

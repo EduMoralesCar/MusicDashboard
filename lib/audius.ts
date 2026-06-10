@@ -55,6 +55,10 @@ export interface AudiusTrack {
     "1000x1000"?: string
   }
   user: AudiusUser
+  album?: {
+    id: string
+    title: string
+  }
 }
 
 export interface AudiusPlaylist {
