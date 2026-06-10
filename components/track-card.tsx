@@ -28,12 +28,10 @@ export function TrackCard({ track, queue }: TrackCardProps) {
   }
 
   const handleCardClick = () => {
-    // If the track has an album, navigate to it!
-    if (track.album && track.album.id) {
-      navigateToAlbum(track.album.id)
-    } else if (track.user && track.user.id) {
-      // Fallback: navigate to artist
-      navigateToArtist(track.user.id, track.user.name)
+    if (isCurrent) {
+      togglePlay()
+    } else {
+      playTrack(track, queue)
     }
   }
 

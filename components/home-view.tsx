@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { Play, Pause, Sun, Sunrise, Moon, Disc } from "lucide-react"
+import { Play, Pause, Sun, Sunrise, Moon } from "lucide-react"
 import type { AudiusTrack } from "@/lib/audius"
 import { TrackCard } from "./track-card"
 import { TrackRow } from "./track-row"
@@ -9,9 +9,77 @@ import { SkeletonCard, SkeletonRow } from "./skeletons"
 import { usePlayer } from "./player-provider"
 import { cn } from "@/lib/utils"
 import { useMemo } from "react"
+import { AlbumCard, type DeezerAlbum } from "./album-card"
 
 // Generic fetcher for SWR
-const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => data.data as AudiusTrack[])
+const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => data.data)
+
+const fallbackAlbumRealIds: Record<string, string> = {
+  latam_1: "deezer_album_316164367",
+  latam_2: "deezer_album_408659277",
+  latam_3: "deezer_album_332352037",
+  latam_4: "deezer_album_518463332",
+  latam_5: "deezer_album_1222449",
+  latam_6: "deezer_album_434457587",
+  latam_7: "deezer_album_90802612",
+  latam_8: "deezer_album_6755148",
+  latam_9: "deezer_album_408659277",
+  latam_10: "deezer_album_274810622",
+  latam_11: "deezer_album_334996",
+  latam_12: "deezer_album_335034",
+  latam_13: "deezer_album_824446221",
+  latam_14: "deezer_album_395194257",
+  latam_15: "deezer_album_716965901",
+  latam_16: "deezer_album_123701",
+  latam_17: "deezer_album_6736087",
+  latam_18: "deezer_album_7441191",
+  latam_19: "deezer_album_12920706",
+  latam_20: "deezer_album_46566682"
+}
+
+const fallbackAlbumNames: Record<string, string> = {
+  latam_1: "Un Verano Sin Ti",
+  latam_2: "MAÑANA SERÁ BONITO",
+  latam_3: "Bzrp Sessions Vol. 52",
+  latam_4: "FERXXOCALIPSIS",
+  latam_5: "Canción Animal",
+  latam_6: "Desvelado",
+  latam_7: "54+1",
+  latam_8: "Soy Como Quiero Ser",
+  latam_9: "MAÑANA SERÁ BONITO",
+  latam_10: "VICE VERSA",
+  latam_11: "Big Bang",
+  latam_12: "Corazones",
+  latam_13: "El Comienzo",
+  latam_14: "Bzrp Sessions Vol. 53",
+  latam_15: "Intuición",
+  latam_16: "Mi Sangre",
+  latam_17: "3.0",
+  latam_18: "Fórmula, Vol. 2",
+  latam_19: "Visualízate",
+  latam_20: "Me Dejé Llevar"
+}
+
+function extractAlbumsFromTracks(tracks: AudiusTrack[]): DeezerAlbum[] {
+  const seen = new Set()
+  const albums: DeezerAlbum[] = []
+  for (const t of tracks) {
+    const albumId = fallbackAlbumRealIds[t.id] || t.album?.id || `album_${t.id}`
+    if (!seen.has(albumId)) {
+      seen.add(albumId)
+      albums.push({
+        id: albumId,
+        title: t.album?.title || fallbackAlbumNames[t.id] || `${t.title} (Single)`,
+        cover: t.artwork?.["480x480"] || t.artwork?.["150x150"] || "",
+        artist: {
+          id: t.user?.id || "",
+          name: t.user?.name || "Unknown Artist"
+        }
+      })
+    }
+  }
+  return albums
+}
 
 export function HomeView() {
   // Fetch real-time official Latin tracks from our server proxy with fallback safety
@@ -19,31 +87,31 @@ export function HomeView() {
     "/api/deezer/trending?type=trending",
     fetcher
   )
-  const { data: reggaeton, isLoading: loadingReggaeton } = useSWR<AudiusTrack[]>(
+  const { data: reggaeton, isLoading: loadingReggaeton } = useSWR<DeezerAlbum[]>(
     "/api/deezer/trending?type=reggaeton",
     fetcher
   )
-  const { data: rockLatino, isLoading: loadingRock } = useSWR<AudiusTrack[]>(
+  const { data: rockLatino, isLoading: loadingRock } = useSWR<DeezerAlbum[]>(
     "/api/deezer/trending?type=rock",
     fetcher
   )
-  const { data: popLatino, isLoading: loadingPop } = useSWR<AudiusTrack[]>(
+  const { data: popLatino, isLoading: loadingPop } = useSWR<DeezerAlbum[]>(
     "/api/deezer/trending?type=pop",
     fetcher
   )
-  const { data: mexico, isLoading: loadingMexico } = useSWR<AudiusTrack[]>(
+  const { data: mexico, isLoading: loadingMexico } = useSWR<DeezerAlbum[]>(
     "/api/deezer/trending?type=mexico",
     fetcher
   )
-  const { data: colombia, isLoading: loadingColombia } = useSWR<AudiusTrack[]>(
+  const { data: colombia, isLoading: loadingColombia } = useSWR<DeezerAlbum[]>(
     "/api/deezer/trending?type=colombia",
     fetcher
   )
-  const { data: argentina, isLoading: loadingArgentina } = useSWR<AudiusTrack[]>(
+  const { data: argentina, isLoading: loadingArgentina } = useSWR<DeezerAlbum[]>(
     "/api/deezer/trending?type=argentina",
     fetcher
   )
-  const { data: peru, isLoading: loadingPeru } = useSWR<AudiusTrack[]>(
+  const { data: peru, isLoading: loadingPeru } = useSWR<DeezerAlbum[]>(
     "/api/deezer/trending?type=peru",
     fetcher
   )
@@ -104,35 +172,35 @@ export function HomeView() {
       {/* Curated Music Carousels/Rows */}
       <div className="flex flex-col gap-12 px-1">
         <Section title="Música de Latinoamérica" subtitle="Los éxitos más reproducidos y escuchados de la región">
-          <CardRow tracks={trending} loading={loadingTrending} limit={12} />
+          <AlbumRow albums={trending ? extractAlbumsFromTracks(trending) : undefined} loading={loadingTrending} limit={18} />
         </Section>
 
         <Section title="Reggaetón & Urbano Hits ⚡" subtitle="Lo último en tendencias urbanas: Bad Bunny, Karol G, Feid, Rauw">
-          <CardRow tracks={reggaeton} loading={loadingReggaeton} limit={12} />
+          <AlbumRow albums={reggaeton} loading={loadingReggaeton} limit={18} />
         </Section>
 
         <Section title="Clásicos del Rock en Español 🎸" subtitle="Himnos inmortales de Soda Stereo, Enanitos Verdes, Prisioneros">
-          <CardRow tracks={rockLatino} loading={loadingRock} limit={12} />
+          <AlbumRow albums={rockLatino} loading={loadingRock} limit={18} />
         </Section>
 
         <Section title="Joyas del Pop Latino 🌟" subtitle="Grandes baladas y éxitos pop oficiales del momento">
-          <CardRow tracks={popLatino} loading={loadingPop} limit={12} />
+          <AlbumRow albums={popLatino} loading={loadingPop} limit={18} />
         </Section>
 
         <Section title="Vibras de Argentina 🇦🇷" subtitle="El mejor trap, pop y rock nacional del Cono Sur">
-          <CardRow tracks={argentina} loading={loadingArgentina} limit={12} />
+          <AlbumRow albums={argentina} loading={loadingArgentina} limit={18} />
         </Section>
 
         <Section title="Música de México 🇲🇽" subtitle="Corridos tumbados, mariachi y rancheras oficiales">
-          <CardRow tracks={mexico} loading={loadingMexico} limit={12} />
+          <AlbumRow albums={mexico} loading={loadingMexico} limit={18} />
         </Section>
 
         <Section title="Sonidos de Colombia 🇨🇴" subtitle="Éxitos pop, cumbia y ritmos latinos de Colombia">
-          <CardRow tracks={colombia} loading={loadingColombia} limit={12} />
+          <AlbumRow albums={colombia} loading={loadingColombia} limit={18} />
         </Section>
 
         <Section title="Ritmos de Perú 🇵🇪" subtitle="Clásicos de cumbia norteña peruana y pop oficial de Perú">
-          <CardRow tracks={peru} loading={loadingPeru} limit={12} />
+          <AlbumRow albums={peru} loading={loadingPeru} limit={18} />
         </Section>
 
         {/* Top 20 Global & LATAM chart */}
@@ -159,22 +227,22 @@ export function HomeView() {
   )
 }
 
-function CardRow({
-  tracks,
+function AlbumRow({
+  albums,
   loading,
-  limit = 12,
+  limit = 18,
 }: {
-  tracks: AudiusTrack[] | undefined
+  albums: DeezerAlbum[] | undefined
   loading: boolean
   limit?: number
 }) {
-  const list = useMemo(() => tracks?.slice(0, limit) ?? [], [tracks, limit])
+  const list = useMemo(() => albums?.slice(0, limit) ?? [], [albums, limit])
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {loading && list.length === 0
         ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-        : list.map((t) => <TrackCard key={t.id} track={t} queue={tracks ?? []} />)}
+        : list.map((album) => <AlbumCard key={album.id} album={album} />)}
     </div>
   )
 }
