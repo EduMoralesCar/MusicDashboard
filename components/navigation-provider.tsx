@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, ReactNode, useCallback } from "react"
-import type { View } from "./sidebar"
+export type View = "home" | "search" | "library" | "liked" | "artist" | "album" | "playlist" | "lyrics" | "settings" | "video"
 
 interface NavigationContextValue {
   view: View
@@ -13,6 +13,10 @@ interface NavigationContextValue {
   navigateToPlaylist: (id: string) => void
   goBack: () => void
   canGoBack: boolean
+  showQueue: boolean
+  setShowQueue: (show: boolean) => void
+  isFullscreen: boolean
+  setIsFullscreen: (full: boolean) => void
 }
 
 const NavigationContext = createContext<NavigationContextValue | null>(null)
@@ -58,6 +62,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     })
   }, [historyStack])
 
+  const [showQueue, setShowQueue] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
   const value = {
     view,
     activeId,
@@ -67,7 +74,11 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     navigateToAlbum,
     navigateToPlaylist,
     goBack,
-    canGoBack: historyStack.length > 0
+    canGoBack: historyStack.length > 0,
+    showQueue,
+    setShowQueue,
+    isFullscreen,
+    setIsFullscreen
   }
 
   return (

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Home, Search, Library, Plus, Heart, Music2, Music4 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLiked } from "./liked-provider"
-import { useNavigation } from "./navigation-provider"
+import { useNavigation, type View } from "./navigation-provider"
 import { useAuth } from "./auth-provider"
 import useSWR from "swr"
 import { toast } from "sonner"
@@ -15,8 +15,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "./ui/dialog"
-
-export type View = "home" | "search" | "library" | "liked" | "artist" | "album" | "playlist" | "lyrics" | "settings"
 
 interface SidebarProps {
   view: View
