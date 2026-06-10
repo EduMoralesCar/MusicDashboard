@@ -19,6 +19,7 @@ import { SettingsView } from "@/components/settings-view"
 import { QueuePanel } from "@/components/queue-panel"
 import { VideoView } from "@/components/video-view"
 import { FullscreenView } from "@/components/fullscreen-view"
+import { cn } from "@/lib/utils"
 
 function InnerPage() {
   const { view, activeId, navigateTo, navigateToArtist, navigateToAlbum } = useNavigation()
@@ -29,7 +30,10 @@ function InnerPage() {
         <Sidebar view={view} onViewChange={(v) => navigateTo(v)} />
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg bg-gradient-to-b from-card to-background border border-neutral-900 shadow-xl">
           <TopBar />
-          <div className="min-h-0 flex-1 overflow-y-auto px-6">
+          <div className={cn(
+            "min-h-0 flex-1",
+            (view === "video" || view === "lyrics") ? "overflow-hidden px-0" : "overflow-y-auto px-6"
+          )}>
             {view === "home" && <HomeView />}
             {view === "search" && <SearchView />}
             {view === "library" && <LibraryView />}

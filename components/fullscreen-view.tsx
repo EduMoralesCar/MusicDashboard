@@ -10,7 +10,7 @@ import useSWR from "swr"
 
 export function FullscreenView() {
   const { currentTrack, progress, seek, setVideoDimensions, showVideo } = usePlayer()
-  const { view, navigateTo, isFullscreen, setIsFullscreen } = useNavigation()
+  const { view, navigateTo, goBack, isFullscreen, setIsFullscreen } = useNavigation()
   
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const videoPlaceholderRef = useRef<HTMLDivElement>(null)
@@ -26,6 +26,14 @@ export function FullscreenView() {
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [setIsFullscreen])
+
+  // Close fullscreen and go back if showVideo is toggled off while in fullscreen video
+  useEffect(() => {
+    if (isFullscreen && view === "video" && !showVideo) {
+      setIsFullscreen(false)
+      goBack()
+    }
+  }, [isFullscreen, view, showVideo, setIsFullscreen, goBack])
 
   // Fetch synced lyrics dynamically
   const { data, isLoading } = useSWR<{ isSynced: boolean; lyrics: LyricLine[] }>(

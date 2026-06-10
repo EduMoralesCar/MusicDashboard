@@ -7,9 +7,16 @@ import { cn } from "@/lib/utils"
 import { useNavigation } from "./navigation-provider"
 
 export function VideoView() {
-  const { currentTrack, setVideoDimensions } = usePlayer()
-  const { navigateTo } = useNavigation()
+  const { currentTrack, showVideo, setVideoDimensions } = usePlayer()
+  const { navigateTo, goBack } = useNavigation()
   const videoPlaceholderRef = useRef<HTMLDivElement>(null)
+
+  // Go back to previous view if showVideo is toggled off
+  useEffect(() => {
+    if (!showVideo) {
+      goBack()
+    }
+  }, [showVideo, goBack])
 
   // Track and report video dimensions to the player provider when active
   useEffect(() => {
@@ -74,13 +81,13 @@ export function VideoView() {
   return (
     <div
       className={cn(
-        "relative -mx-6 -mt-6 flex min-h-[90vh] flex-col bg-gradient-to-b px-6 py-12 transition-all duration-1000",
+        "relative flex h-full w-full flex-col bg-gradient-to-b px-8 py-6 transition-all duration-1000 overflow-hidden",
         backgroundGradient
       )}
     >
-      <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col justify-center animate-in fade-in duration-300">
+      <div className="mx-auto w-full max-w-4xl h-full flex flex-col justify-between animate-in fade-in duration-300">
         {/* Header info */}
-        <div className="mb-8 flex items-center justify-between border-b border-white/5 pb-6 w-full">
+        <div className="flex items-center justify-between border-b border-white/5 pb-4 w-full shrink-0">
           <div className="flex items-center gap-4">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-neutral-900 shadow-lg">
               {currentTrack.artwork?.["150x150"] ? (
@@ -116,10 +123,10 @@ export function VideoView() {
         </div>
 
         {/* Video Placeholder Container */}
-        <div className="flex-1 flex items-center justify-center w-full min-h-[50vh] py-4">
+        <div className="flex-1 min-h-0 flex items-center justify-center w-full py-4">
           <div
             ref={videoPlaceholderRef}
-            className="relative w-full aspect-video max-w-3xl rounded-2xl bg-black/50 border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl transition-all duration-300"
+            className="relative w-full max-w-3xl aspect-video max-h-full rounded-2xl bg-black/50 border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl transition-all duration-300"
           >
             <div className="flex flex-col items-center gap-3 text-neutral-400">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />

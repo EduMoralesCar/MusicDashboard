@@ -59,7 +59,21 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [showVideo, setShowVideo] = useState(false)
   const [sleepTimerDuration, setSleepTimerDuration] = useState<number | null>(null)
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number | null>(null)
-  const [videoDimensions, setVideoDimensions] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
+  const [videoDimensions, setVideoDimensionsState] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
+
+  const setVideoDimensions = useCallback((dims: { top: number; left: number; width: number; height: number } | null) => {
+    setVideoDimensionsState((prev) => {
+      if (!dims && !prev) return null
+      if (dims && prev &&
+          dims.top === prev.top &&
+          dims.left === prev.left &&
+          dims.width === prev.width &&
+          dims.height === prev.height) {
+        return prev
+      }
+      return dims
+    })
+  }, [])
 
   const playerRef = useRef<any>(null)
   const progressIntervalRef = useRef<any>(null)

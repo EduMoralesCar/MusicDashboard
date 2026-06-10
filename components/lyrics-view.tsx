@@ -87,13 +87,13 @@ export function LyricsView() {
   return (
     <div
       className={cn(
-        "relative -mx-6 -mt-6 flex min-h-[90vh] flex-col bg-gradient-to-b px-6 py-12 transition-all duration-1000",
+        "relative flex h-full w-full flex-col bg-gradient-to-b px-8 py-6 transition-all duration-1000 overflow-hidden",
         backgroundGradient
       )}
     >
-      <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
+      <div className="mx-auto w-full max-w-4xl h-full flex flex-col justify-between animate-in fade-in duration-300">
         {/* Album header info */}
-        <div className="mb-8 flex items-center justify-between border-b border-white/5 pb-6">
+        <div className="flex items-center justify-between border-b border-white/5 pb-4 shrink-0">
           <div className="flex items-center gap-4">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-neutral-900 shadow-lg">
               {currentTrack.artwork?.["150x150"] ? (
@@ -133,8 +133,8 @@ export function LyricsView() {
         {/* Scrollable lyrics area */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto pr-4 scrollbar-thin select-none max-h-[60vh] py-12"
-          style={{ maskImage: "linear-gradient(to bottom, transparent, white 20%, white 80%, transparent)" }}
+          className="flex-1 overflow-y-auto pr-4 scrollbar-thin select-none py-6 min-h-0"
+          style={{ maskImage: "linear-gradient(to bottom, transparent, white 15%, white 85%, transparent)" }}
         >
           <div className="flex flex-col gap-6 py-20">
             {lyrics.map((line, idx) => {
@@ -183,7 +183,7 @@ export function LyricsView() {
         </div>
 
         {/* Sync hint */}
-        <div className="mt-8 text-center text-xs font-semibold tracking-wider text-neutral-500 uppercase flex items-center justify-center gap-1.5 border-t border-white/5 pt-6">
+        <div className="mt-4 text-center text-xs font-semibold tracking-wider text-neutral-500 uppercase flex items-center justify-center gap-1.5 border-t border-white/5 pt-4 shrink-0">
           <Mic2 className="h-3.5 w-3.5 text-[#1db954]" />
           {isSynced
             ? "Haz clic en cualquier verso para saltar directamente a ese momento de la canción"
