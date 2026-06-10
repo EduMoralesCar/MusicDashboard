@@ -45,22 +45,7 @@ export async function GET(request: Request) {
     let url = `https://api.deezer.com/artist/${id}`
     
     if (type === "top") {
-      try {
-        // Fetch artist official name first to query up to 300 songs using specific artist filter
-        const artistRes = await fetch(`https://api.deezer.com/artist/${id}`, { headers })
-        if (artistRes.ok) {
-          const artistData = await artistRes.json()
-          if (artistData.name) {
-            url = `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artistData.name)}"\&limit=300`
-          } else {
-            url = `https://api.deezer.com/artist/${id}/top?limit=150`
-          }
-        } else {
-          url = `https://api.deezer.com/artist/${id}/top?limit=150`
-        }
-      } catch (err) {
-        url = `https://api.deezer.com/artist/${id}/top?limit=150`
-      }
+      url = `https://api.deezer.com/artist/${id}/top?limit=150`
     } else if (type === "albums") {
       url = `https://api.deezer.com/artist/${id}/albums?limit=100`
     }

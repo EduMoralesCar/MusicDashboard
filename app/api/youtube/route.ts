@@ -45,9 +45,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No video found" }, { status: 404 })
     }
 
-    // Return the first video ID found
+    // Return the first video ID found and all alternative matches
     const videoId = matches[0]
-    return NextResponse.json({ videoId })
+    return NextResponse.json({ videoId, videoIds: matches })
   } catch (error: any) {
     console.error("❌ Error in YouTube search proxy:", error)
     return NextResponse.json({ error: "Error searching YouTube" }, { status: 500 })
