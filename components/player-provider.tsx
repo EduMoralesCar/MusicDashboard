@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, useCal
 import type { AudiusTrack } from "@/lib/audius"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useNavigation } from "./navigation-provider"
 
 interface PlayerContextValue {
   currentTrack: AudiusTrack | null
@@ -30,6 +31,8 @@ interface PlayerContextValue {
   sleepTimerDuration: number | null
   sleepTimerRemaining: number | null
   setSleepTimer: (minutes: number | null) => void
+  videoDimensions: { top: number; left: number; width: number; height: number } | null
+  setVideoDimensions: (dims: { top: number; left: number; width: number; height: number } | null) => void
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null)
@@ -42,6 +45,7 @@ declare global {
 }
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
+  const { view, navigateTo, goBack } = useNavigation()
   const [currentTrack, setCurrentTrack] = useState<AudiusTrack | null>(null)
   const [queue, setQueue] = useState<AudiusTrack[]>([])
   const [isPlaying, setIsPlaying] = useState(false)
@@ -55,6 +59,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [showVideo, setShowVideo] = useState(false)
   const [sleepTimerDuration, setSleepTimerDuration] = useState<number | null>(null)
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number | null>(null)
+  const [videoDimensions, setVideoDimensions] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
 
   const playerRef = useRef<any>(null)
   const progressIntervalRef = useRef<any>(null)
@@ -398,6 +403,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       sleepTimerDuration,
       sleepTimerRemaining,
       setSleepTimer,
+      videoDimensions,
+      setVideoDimensions,
     }),
     [
       currentTrack,
@@ -424,20 +431,54 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       sleepTimerDuration,
       sleepTimerRemaining,
       setSleepTimer,
+      videoDimensions,
+      setVideoDimensions,
     ],
   )
 
   return (
     <PlayerContext.Provider value={value}>
       {children}
-      {/* Premium Video Container - floating element bottom-left corner */}
+      {/* Premium Video Container - floating element bottom-left corner or expanded in lyrics/video */}
       <div
+        onDoubleClick={() => {
+          if (view === "video") {
+            goBack()
+          } else {
+            navigateTo("video")
+          }
+        }}
         className={cn(
-          "fixed bottom-24 left-4 z-40 overflow-hidden rounded-xl border border-neutral-800 bg-black shadow-2xl transition-all duration-500",
+          "fixed z-[70] overflow-hidden rounded-xl border border-neutral-800 bg-black shadow-2xl transition-all duration-500 cursor-pointer select-none",
           showVideo && currentTrack
-            ? "h-[135px] w-[240px] opacity-100 translate-y-0 scale-100"
-            : "h-0 w-0 opacity-0 translate-y-4 scale-95 pointer-events-none"
+            ? "opacity-100 scale-100 pointer-events-auto"
+            : "opacity-0 scale-95 pointer-events-none"
         )}
+        style={
+          showVideo && currentTrack && (view === "lyrics" || view === "video") && videoDimensions
+            ? {
+                left: `${videoDimensions.left}px`,
+                top: `${videoDimensions.top}px`,
+                width: `${videoDimensions.width}px`,
+                height: `${videoDimensions.height}px`,
+                borderRadius: "12px",
+              }
+            : showVideo && currentTrack
+            ? {
+                left: "16px",
+                top: "calc(100vh - 231px)",
+                width: "240px",
+                height: "135px",
+                borderRadius: "12px",
+              }
+            : {
+                left: "16px",
+                top: "calc(100vh - 96px)",
+                width: "0px",
+                height: "0px",
+                borderRadius: "12px",
+              }
+        }
       >
         <div id="yt-player" className="h-full w-full rounded-xl pointer-events-none" />
       </div>

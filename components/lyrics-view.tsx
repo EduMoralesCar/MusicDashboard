@@ -3,12 +3,14 @@
 import { useEffect, useRef, useMemo } from "react"
 import { usePlayer } from "./player-provider"
 import type { LyricLine } from "@/lib/lyrics"
-import { Music4, Mic2, AlertCircle, Loader2 } from "lucide-react"
+import { Music4, Mic2, AlertCircle, Loader2, Tv } from "lucide-react"
 import { cn } from "@/lib/utils"
 import useSWR from "swr"
+import { useNavigation } from "./navigation-provider"
 
 export function LyricsView() {
-  const { currentTrack, progress, seek, isPlaying } = usePlayer()
+  const { currentTrack, progress, seek, isPlaying, showVideo } = usePlayer()
+  const { navigateTo } = useNavigation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const lineRefs = useRef<(HTMLButtonElement | null)[]>([])
 
@@ -91,29 +93,41 @@ export function LyricsView() {
     >
       <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
         {/* Album header info */}
-        <div className="mb-8 flex items-center gap-4 border-b border-white/5 pb-6">
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-neutral-900 shadow-lg">
-            {currentTrack.artwork?.["150x150"] ? (
-              <img
-                src={currentTrack.artwork["150x150"]}
-                alt={currentTrack.title}
-                className="h-full w-full object-cover animate-in fade-in duration-300"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-neutral-600">
-                <Music4 className="h-6 w-6" />
-              </div>
-            )}
+        <div className="mb-8 flex items-center justify-between border-b border-white/5 pb-6">
+          <div className="flex items-center gap-4">
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-neutral-900 shadow-lg">
+              {currentTrack.artwork?.["150x150"] ? (
+                <img
+                  src={currentTrack.artwork["150x150"]}
+                  alt={currentTrack.title}
+                  className="h-full w-full object-cover animate-in fade-in duration-300"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-neutral-600">
+                  <Music4 className="h-6 w-6" />
+                </div>
+              )}
+            </div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-[#1db954]">
+                Reproduciendo
+              </span>
+              <h1 className="text-xl font-bold text-white line-clamp-1">{currentTrack.title}</h1>
+              <p className="text-sm font-semibold text-neutral-400 mt-0.5">
+                {currentTrack.user?.name}
+              </p>
+            </div>
           </div>
-          <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-[#1db954]">
-              Reproduciendo
-            </span>
-            <h1 className="text-xl font-bold text-white line-clamp-1">{currentTrack.title}</h1>
-            <p className="text-sm font-semibold text-neutral-400 mt-0.5">
-              {currentTrack.user?.name}
-            </p>
-          </div>
+
+          {showVideo && (
+            <button
+              onClick={() => navigateTo("video")}
+              className="px-4 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 transition-all rounded-full border border-white/10 flex items-center gap-2 cursor-pointer"
+            >
+              <Tv className="h-3.5 w-3.5" />
+              <span>Cambiar a video</span>
+            </button>
+          )}
         </div>
 
         {/* Scrollable lyrics area */}

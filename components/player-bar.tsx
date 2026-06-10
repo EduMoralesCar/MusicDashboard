@@ -61,7 +61,7 @@ export function PlayerBar() {
     toggleVideo,
   } = usePlayer()
 
-  const { view, navigateTo, goBack } = useNavigation()
+  const { view, navigateTo, goBack, showQueue, setShowQueue, isFullscreen, setIsFullscreen } = useNavigation()
   const { isLiked, toggleLike } = useLiked()
   const liked = currentTrack ? isLiked(currentTrack.id) : false
   const cover =
@@ -160,8 +160,8 @@ export function PlayerBar() {
                 <DropdownMenuTrigger asChild>
                   <button
                     className={cn(
-                      "ml-1 shrink-0 transition-colors cursor-pointer text-muted-foreground hover:text-foreground",
-                      playlists?.some(p => p.tracks?.some((t: any) => t && t.id === currentTrack.id)) && "text-primary"
+                       "ml-1 shrink-0 transition-colors cursor-pointer text-muted-foreground hover:text-foreground",
+                       playlists?.some(p => p.tracks?.some((t: any) => t && t.id === currentTrack.id)) && "text-primary"
                     )}
                     aria-label="Añadir a playlist"
                   >
@@ -318,8 +318,12 @@ export function PlayerBar() {
           <Mic2 className="h-4 w-4" />
         </button>
         <button
+          onClick={() => setShowQueue(!showQueue)}
           aria-label="Queue"
-          className="hidden text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
+          className={cn(
+            "hidden text-muted-foreground transition-colors hover:text-foreground md:inline-flex",
+            showQueue ? "text-primary hover:text-[#1ed760]" : "text-muted-foreground hover:text-foreground"
+          )}
         >
           <ListMusic className="h-4 w-4" />
         </button>
@@ -357,8 +361,13 @@ export function PlayerBar() {
           <Tv className="h-4 w-4" />
         </button>
         <button
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          disabled={!currentTrack || (view !== "lyrics" && view !== "video")}
           aria-label="Fullscreen"
-          className="hidden text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
+          className={cn(
+            "hidden text-muted-foreground transition-colors hover:text-foreground md:inline-flex disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer",
+            isFullscreen ? "text-primary hover:text-[#1ed760]" : "text-muted-foreground hover:text-foreground"
+          )}
         >
           <Maximize2 className="h-4 w-4" />
         </button>
