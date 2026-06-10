@@ -13,7 +13,8 @@ export function middleware(request: NextRequest) {
                     pathname.startsWith("/api/auth/register") ||
                     pathname.startsWith("/api/auth/verify") ||
                     pathname.startsWith("/api/auth/forgot-password") ||
-                    pathname.startsWith("/api/auth/reset-password")
+                    pathname.startsWith("/api/auth/reset-password") ||
+                    pathname.startsWith("/api/auth/resend-otp")
 
   // Let other API routes, public assets, or _next static files pass through
   const isStaticFile = pathname.includes(".") || pathname.startsWith("/_next")
