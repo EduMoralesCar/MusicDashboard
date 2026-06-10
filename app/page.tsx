@@ -16,6 +16,9 @@ import { AlbumView } from "@/components/album-view"
 import { PlaylistView } from "@/components/playlist-view"
 import { LyricsView } from "@/components/lyrics-view"
 import { SettingsView } from "@/components/settings-view"
+import { QueuePanel } from "@/components/queue-panel"
+import { VideoView } from "@/components/video-view"
+import { FullscreenView } from "@/components/fullscreen-view"
 
 function InnerPage() {
   const { view, activeId, navigateTo, navigateToArtist, navigateToAlbum } = useNavigation()
@@ -33,6 +36,7 @@ function InnerPage() {
             {view === "liked" && <LikedSongsView />}
             {view === "lyrics" && <LyricsView />}
             {view === "settings" && <SettingsView />}
+            {view === "video" && <VideoView />}
             
             {/* Dynamic Interactive Spotify Detail Views */}
             {view === "artist" && activeId && (
@@ -59,8 +63,10 @@ function InnerPage() {
             )}
           </div>
         </main>
+        <QueuePanel />
       </div>
       <PlayerBar />
+      <FullscreenView />
     </div>
   )
 }
