@@ -72,6 +72,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json(
       {
         message: "Inicio de sesión exitoso.",
+        token,
         user: {
           username: user.username,
           email: user.email,

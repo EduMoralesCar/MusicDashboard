@@ -4,8 +4,16 @@ import type { NextRequest } from "next/server"
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // Get the session cookie
-  const sessionToken = request.cookies.get("eumora_session")
+  // Get the session cookie value
+  let sessionToken = request.cookies.get("eumora_session")?.value
+
+  // Check Authorization header if no cookie is found (useful for mobile clients)
+  if (!sessionToken) {
+    const authHeader = request.headers.get("Authorization")
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      sessionToken = authHeader.substring(7)
+    }
+  }
 
   // Define public paths that shouldn't require authentication
   const isAuthPage = pathname.startsWith("/auth")
@@ -18,6 +26,7 @@ export function middleware(request: NextRequest) {
 
   // Let other API routes, public assets, or _next static files pass through
   const isStaticFile = pathname.includes(".") || pathname.startsWith("/_next")
+  const isApi = pathname.startsWith("/api")
 
   // If user is trying to access auth page but is already logged in, redirect to home
   if (isAuthPage && sessionToken) {
@@ -25,9 +34,21 @@ export function middleware(request: NextRequest) {
   }
 
   // If user is NOT logged in and is trying to access a protected page, redirect to auth page
-  if (!sessionToken && !isAuthPage && !isAuthApi && !isStaticFile && pathname !== "/favicon.ico") {
+  // We exclude API paths (isApi) and static assets/auth pages
+  if (!sessionToken && !isAuthPage && !isAuthApi && !isStaticFile && !isApi && pathname !== "/favicon.ico") {
     // Redirect to the login/register screen
     return NextResponse.redirect(new URL("/auth", request.url))
+  }
+
+  // Backport the authorization token as a Cookie header for downstream API routes to consume
+  if (sessionToken && !request.cookies.has("eumora_session")) {
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set("Cookie", `eumora_session=${sessionToken}`)
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
   }
 
   return NextResponse.next()

@@ -50,6 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       if (res.ok) {
         setUser(null)
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("eumora_session_token")
+        }
         toast.success("Sesión cerrada correctamente.")
         // Force redirect to auth page and reload
         window.location.href = "/auth"
