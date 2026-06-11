@@ -122,7 +122,14 @@ export function PlayerBar() {
   const pct = duration > 0 ? (progress / duration) * 100 : 0
 
   return (
-    <footer className="flex h-20 w-full items-center gap-4 border-t border-border bg-card px-4 text-card-foreground">
+    <footer className="relative flex h-20 w-full items-center gap-4 border-t border-border bg-card px-4 text-card-foreground">
+      {/* 2px Progress Bar at the top of the player bar for mobile/desktop visual feedback */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-neutral-800">
+        <div 
+          className="h-full bg-primary transition-all duration-100" 
+          style={{ width: `${pct}%` }}
+        />
+      </div>
       {/* Left: track info */}
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {currentTrack ? (
@@ -232,8 +239,8 @@ export function PlayerBar() {
         )}
       </div>
 
-      {/* Center: controls */}
-      <div className="flex max-w-xl flex-1 flex-col items-center gap-1">
+      {/* Center: controls (desktop only) */}
+      <div className="hidden md:flex max-w-xl flex-1 flex-col items-center gap-1">
         <div className="flex items-center gap-4">
           <button
             aria-label="Shuffle"
@@ -298,8 +305,8 @@ export function PlayerBar() {
         </div>
       </div>
 
-      {/* Right: volume & misc */}
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+      {/* Right: volume & misc (desktop only) */}
+      <div className="hidden md:flex min-w-0 flex-1 items-center justify-end gap-3">
         <button
           onClick={() => {
             if (view === "lyrics") {
@@ -370,6 +377,34 @@ export function PlayerBar() {
           )}
         >
           <Maximize2 className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Mobile-only Play/Pause and Like controls (shown only on screens < 768px) */}
+      <div className="flex items-center gap-3 md:hidden">
+        <button
+          onClick={() => currentTrack && toggleLike(currentTrack)}
+          aria-label={liked ? "Quitar de tus me gusta" : "Añadir a tus me gusta"}
+          className={cn(
+            "transition-colors cursor-pointer p-1.5 hover:bg-neutral-800/40 rounded-full",
+            liked ? "text-primary" : "text-neutral-400"
+          )}
+        >
+          <Heart className="h-5 w-5" fill={liked ? "currentColor" : "none"} />
+        </button>
+        <button
+          onClick={togglePlay}
+          disabled={!currentTrack}
+          aria-label={isPlaying ? "Pausar" : "Reproducir"}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black active:scale-95 transition-all cursor-pointer shadow-md"
+        >
+          {isLoading ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
+          ) : isPlaying ? (
+            <Pause className="h-5 w-5" fill="currentColor" />
+          ) : (
+            <Play className="h-5 w-5 translate-x-[1px]" fill="currentColor" />
+          )}
         </button>
       </div>
     </footer>

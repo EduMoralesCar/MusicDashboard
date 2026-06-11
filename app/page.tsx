@@ -1,6 +1,6 @@
 "use client"
 
-import { AuthProvider } from "@/components/auth-provider"
+import { useAuth } from "@/components/auth-provider"
 import { PlayerProvider } from "@/components/player-provider"
 import { LikedProvider } from "@/components/liked-provider"
 import { NavigationProvider, useNavigation } from "@/components/navigation-provider"
@@ -20,9 +20,30 @@ import { QueuePanel } from "@/components/queue-panel"
 import { VideoView } from "@/components/video-view"
 import { FullscreenView } from "@/components/fullscreen-view"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { Loader2, Home, Search, Library } from "lucide-react"
 
 function InnerPage() {
-  const { view, activeId, navigateTo, navigateToArtist, navigateToAlbum } = useNavigation()
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const { view, activeId, navigateTo } = useNavigation()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/auth")
+    }
+  }, [user, loading, router])
+
+  if (loading) {
+    return (
+      <div className="flex h-svh items-center justify-center bg-black text-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-[#1db954]" />
+      </div>
+    )
+  }
+
+  if (!user) return null
 
   return (
     <div className="flex h-svh flex-col bg-background text-foreground select-none">
@@ -70,6 +91,32 @@ function InnerPage() {
         <QueuePanel />
       </div>
       <PlayerBar />
+      
+      {/* Mobile Bottom Navigation */}
+      <nav className="flex h-16 items-center justify-around border-t border-neutral-900 bg-black/95 backdrop-blur-md px-6 py-2 md:hidden shrink-0">
+        {[
+          { id: "home" as const, label: "Inicio", icon: Home },
+          { id: "search" as const, label: "Buscar", icon: Search },
+          { id: "library" as const, label: "Biblioteca", icon: Library },
+        ].map((item) => {
+          const Icon = item.icon
+          const active = view === item.id || (item.id === "library" && (view === "liked" || view === "playlist"))
+          return (
+            <button
+              key={item.id}
+              onClick={() => navigateTo(item.id)}
+              className={cn(
+                "flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-all duration-200 cursor-pointer",
+                active ? "text-[#1db954]" : "text-neutral-400 hover:text-white"
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
+      </nav>
+      
       <FullscreenView />
     </div>
   )
@@ -77,14 +124,12 @@ function InnerPage() {
 
 export default function Page() {
   return (
-    <AuthProvider>
-      <NavigationProvider>
-        <LikedProvider>
-          <PlayerProvider>
-            <InnerPage />
-          </PlayerProvider>
-        </LikedProvider>
-      </NavigationProvider>
-    </AuthProvider>
+    <NavigationProvider>
+      <LikedProvider>
+        <PlayerProvider>
+          <InnerPage />
+        </PlayerProvider>
+      </LikedProvider>
+    </NavigationProvider>
   )
 }

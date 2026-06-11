@@ -4,13 +4,22 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Music2, Mail, Lock, User as UserIcon, ShieldCheck, ArrowLeft, Loader2, KeyRound, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/components/auth-provider"
 
 type AuthState = "login" | "register" | "verify" | "forgot" | "reset"
 
 export default function AuthPage() {
   const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const [state, setState] = useState<AuthState>("login")
   const [loading, setLoading] = useState(false)
+
+  // Redirect to home if user is already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/")
+    }
+  }, [user, authLoading, router])
   
   // Form values
   const [email, setEmail] = useState("")
@@ -104,6 +113,9 @@ export default function AuthPage() {
         return
       }
 
+      if (data.token) {
+        localStorage.setItem("eumora_session_token", data.token)
+      }
       toast.success("¡Bienvenido de vuelta a Eumora Music!")
       router.push("/")
       router.refresh()
@@ -178,6 +190,9 @@ export default function AuthPage() {
         return
       }
 
+      if (data.token) {
+        localStorage.setItem("eumora_session_token", data.token)
+      }
       toast.success(data.message)
       router.push("/")
       router.refresh()
@@ -247,6 +262,9 @@ export default function AuthPage() {
         return
       }
 
+      if (data.token) {
+        localStorage.setItem("eumora_session_token", data.token)
+      }
       toast.success(data.message)
       router.push("/")
       router.refresh()
@@ -256,6 +274,16 @@ export default function AuthPage() {
       setLoading(false)
     }
   }
+
+  if (authLoading) {
+    return (
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#0c0c0e] text-white">
+        <Loader2 className="h-8 w-8 animate-spin text-[#1db954]" />
+      </div>
+    )
+  }
+
+  if (user) return null
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#0c0c0e] px-4 text-white">

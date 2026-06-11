@@ -21,8 +21,8 @@ export function QueuePanel() {
   return (
     <aside
       className={cn(
-        "flex flex-col h-full overflow-hidden rounded-lg bg-card border border-neutral-900 shadow-2xl transition-all duration-300 ease-in-out shrink-0",
-        showQueue ? "w-80 opacity-100" : "w-0 opacity-0 border-none pointer-events-none"
+        "hidden md:flex flex-col h-full overflow-hidden rounded-lg bg-card border border-neutral-900 shadow-2xl transition-all duration-300 ease-in-out shrink-0",
+        showQueue ? "md:w-80 opacity-100" : "w-0 opacity-0 border-none pointer-events-none"
       )}
     >
       {/* Header */}

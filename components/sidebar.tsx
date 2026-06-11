@@ -91,7 +91,7 @@ export function Sidebar({ view, onViewChange }: SidebarProps) {
 
   return (
     <>
-    <aside className="flex h-full w-64 shrink-0 flex-col gap-2 bg-[#000000] p-2 text-sidebar-foreground select-none">
+    <aside className="hidden md:flex h-full w-64 shrink-0 flex-col gap-2 bg-[#000000] p-2 text-sidebar-foreground select-none">
       {/* Logo + main nav */}
       <div className="rounded-lg bg-[#121212] p-4">
         <div className="mb-6 flex items-center gap-2 px-2">
