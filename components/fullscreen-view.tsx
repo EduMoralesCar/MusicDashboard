@@ -1,16 +1,54 @@
 "use client"
 
-import { useEffect, useRef, useMemo } from "react"
+import { useEffect, useRef, useMemo, useState } from "react"
 import { usePlayer } from "./player-provider"
 import { useNavigation } from "./navigation-provider"
+import { useLiked } from "./liked-provider"
 import type { LyricLine } from "@/lib/lyrics"
-import { Music4, Mic2, Tv, Minimize2, Loader2, AlertCircle } from "lucide-react"
+import { Music4, Mic2, Tv, Minimize2, Loader2, AlertCircle, ChevronDown, Heart, Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Repeat1, Share2, ListMusic, Laptop2, MoreVertical } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { formatDuration } from "@/lib/audius"
 import useSWR from "swr"
 
 export function FullscreenView() {
-  const { currentTrack, progress, seek, setVideoDimensions, showVideo } = usePlayer()
-  const { view, navigateTo, goBack, isFullscreen, setIsFullscreen } = useNavigation()
+  const { 
+    currentTrack, 
+    progress, 
+    duration,
+    isPlaying, 
+    isLoading, 
+    togglePlay, 
+    next, 
+    previous, 
+    seek, 
+    setVideoDimensions, 
+    showVideo,
+    toggleVideo,
+    shuffle,
+    toggleShuffle,
+    repeat,
+    cycleRepeat
+  } = usePlayer()
+  const { view, navigateTo, goBack, isFullscreen, setIsFullscreen, navigateToArtist, setShowQueue } = useNavigation()
+  const { isLiked, toggleLike } = useLiked()
+
+  const [isMobile, setIsMobile] = useState(false)
+  const [showVideoOnMobile, setShowVideoOnMobile] = useState(false)
+
+  // Track window size to adapt layout dynamically
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  // Reset video mode when track changes
+  useEffect(() => {
+    setShowVideoOnMobile(false)
+  }, [currentTrack])
   
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const videoPlaceholderRef = useRef<HTMLDivElement>(null)
@@ -36,8 +74,8 @@ export function FullscreenView() {
   }, [isFullscreen, view, showVideo, setIsFullscreen, goBack])
 
   // Fetch synced lyrics dynamically
-  const { data, isLoading } = useSWR<{ isSynced: boolean; lyrics: LyricLine[] }>(
-    currentTrack && view === "lyrics"
+  const { data, isLoading: isLoadingLyrics } = useSWR<{ isSynced: boolean; lyrics: LyricLine[] }>(
+    currentTrack && (view === "lyrics" || isMobile)
       ? `/api/lyrics?track=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.user?.name || "")}`
       : null,
     (url: string) => fetch(url).then((res) => res.json())
@@ -72,7 +110,7 @@ export function FullscreenView() {
 
   // Track video dimensions if view === "video" in fullscreen
   useEffect(() => {
-    if (view !== "video") {
+    if (view !== "video" && !(isMobile && showVideoOnMobile)) {
       return
     }
 
@@ -121,6 +159,256 @@ export function FullscreenView() {
     if (hash === 2) return "from-[#0d2a3f] via-[#040e15] to-black" // deep ocean blue
     return "from-[#2f0b54] via-[#10031d] to-black" // deep purple
   }, [currentTrack])
+
+  if (!isFullscreen || !currentTrack) return null
+
+  const liked = isLiked(currentTrack.id)
+  const cover = currentTrack?.artwork?.["480x480"] ||
+                currentTrack?.artwork?.["150x150"] ||
+                currentTrack?.artwork?.["1000x1000"] ||
+                null
+  const pct = duration > 0 ? (progress / duration) * 100 : 0
+  const trackDuration = duration || currentTrack?.duration || 0
+
+  if (isMobile) {
+    return (
+      <div
+        className={cn(
+          "fixed inset-0 z-[60] flex flex-col bg-gradient-to-b overflow-y-auto text-white select-none scrollbar-none",
+          backgroundGradient
+        )}
+      >
+        {/* Main Player Area: occupies at least full viewport height */}
+        <div className="flex min-h-svh flex-col justify-between px-6 py-6 shrink-0">
+          {/* Header */}
+          <header className="flex items-center justify-between">
+            <button 
+              onClick={() => setIsFullscreen(false)}
+              className="p-1 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+              aria-label="Minimizar"
+            >
+              <ChevronDown className="h-6 w-6" />
+            </button>
+            <div className="text-center">
+              <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-bold">
+                REPRODUCIENDO DESDE
+              </span>
+              <h1 className="text-xs font-bold truncate max-w-[200px] mt-0.5">
+                {view === "liked" ? "Tus me gusta" : view === "playlist" ? "Playlist" : "Biblioteca"}
+              </h1>
+            </div>
+            <button className="p-1 hover:bg-white/10 rounded-full transition-colors cursor-pointer text-neutral-400 hover:text-white">
+              <MoreVertical className="h-5 w-5" />
+            </button>
+          </header>
+
+          {/* Album Cover or Video Placeholder */}
+          <div className="flex-1 my-6 flex items-center justify-center">
+            {showVideoOnMobile ? (
+              /* Video Container */
+              <div
+                ref={videoPlaceholderRef}
+                className="w-full aspect-video rounded-xl bg-black border border-white/5 flex items-center justify-center overflow-hidden shadow-2xl relative"
+              >
+                <div className="flex flex-col items-center gap-2 text-neutral-500">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="text-[10px] uppercase tracking-wider font-bold">Cargando video...</span>
+                </div>
+                {/* Floating button to switch back to cover */}
+                <button
+                  onClick={() => setShowVideoOnMobile(false)}
+                  className="absolute bottom-3 right-3 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 border border-white/10 cursor-pointer shadow-md transition-colors"
+                  aria-label="Ver carátula"
+                >
+                  <Music4 className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              /* Album Cover Image */
+              <div className="relative aspect-square w-full max-w-[300px] rounded-xl overflow-hidden shadow-2xl shadow-black/60 border border-white/5">
+                <img
+                  src={cover || "/placeholder.svg"}
+                  alt={currentTrack.title}
+                  className="h-full w-full object-cover"
+                />
+                {/* Floating button to switch to video if supported */}
+                <button
+                  onClick={() => setShowVideoOnMobile(true)}
+                  className="absolute bottom-3 right-3 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 border border-white/10 cursor-pointer shadow-md transition-colors animate-pulse"
+                  aria-label="Ver video"
+                >
+                  <Tv className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Track details */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h2 
+                  onClick={() => {
+                    setIsFullscreen(false)
+                    if (currentTrack.user?.id) {
+                      navigateToArtist(currentTrack.user.id.toString(), currentTrack.user.name)
+                    }
+                  }}
+                  className="text-xl font-bold truncate hover:underline cursor-pointer"
+                >
+                  {currentTrack.title}
+                </h2>
+                <p 
+                  onClick={() => {
+                    setIsFullscreen(false)
+                    if (currentTrack.user?.id) {
+                      navigateToArtist(currentTrack.user.id.toString(), currentTrack.user.name)
+                    }
+                  }}
+                  className="text-sm text-neutral-400 truncate mt-1 hover:underline cursor-pointer"
+                >
+                  {currentTrack.user?.name}
+                </p>
+              </div>
+              
+              <button
+                onClick={() => toggleLike(currentTrack)}
+                className={cn(
+                  "transition-transform active:scale-90 cursor-pointer p-1",
+                  liked ? "text-[#1db954]" : "text-neutral-400"
+                )}
+                aria-label={liked ? "Eliminar de me gusta" : "Añadir a me gusta"}
+              >
+                <Heart className="h-6 w-6" fill={liked ? "currentColor" : "none"} />
+              </button>
+            </div>
+          </div>
+
+          {/* Timeline slider */}
+          <div className="space-y-1">
+            <ProgressSlider value={pct} onChange={(p) => seek((p / 100) * trackDuration)} disabled={!currentTrack} />
+            <div className="flex justify-between text-[10px] text-neutral-400 font-bold tabular-nums">
+              <span>{formatDuration(progress)}</span>
+              <span>{formatDuration(trackDuration)}</span>
+            </div>
+          </div>
+
+          {/* Playback Controls */}
+          <div className="flex items-center justify-between px-2 mt-4">
+            <button
+              onClick={toggleShuffle}
+              className={cn(
+                "transition-colors cursor-pointer p-2",
+                shuffle ? "text-[#1db954] font-bold" : "text-neutral-400"
+              )}
+              aria-label="Reproducción aleatoria"
+            >
+              <Shuffle className="h-5 w-5" />
+            </button>
+            <button
+              onClick={previous}
+              disabled={!currentTrack}
+              className="text-white active:scale-95 disabled:opacity-40 transition-transform cursor-pointer p-2"
+              aria-label="Canción anterior"
+            >
+              <SkipBack className="h-7 w-7" fill="currentColor" />
+            </button>
+            <button
+              onClick={togglePlay}
+              disabled={!currentTrack}
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-black active:scale-95 transition-transform cursor-pointer shadow-lg"
+              aria-label={isPlaying ? "Pausar" : "Reproducir"}
+            >
+              {isLoading ? (
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent" />
+              ) : isPlaying ? (
+                <Pause className="h-7 w-7" fill="currentColor" />
+              ) : (
+                <Play className="h-7 w-7 translate-x-[1px]" fill="currentColor" />
+              )}
+            </button>
+            <button
+              onClick={next}
+              disabled={!currentTrack}
+              className="text-white active:scale-95 disabled:opacity-40 transition-transform cursor-pointer p-2"
+              aria-label="Canción siguiente"
+            >
+              <SkipForward className="h-7 w-7" fill="currentColor" />
+            </button>
+            <button
+              onClick={cycleRepeat}
+              className={cn(
+                "transition-colors cursor-pointer p-2",
+                repeat !== "off" ? "text-[#1db954] font-bold" : "text-neutral-400"
+              )}
+              aria-label="Repetir"
+            >
+              {repeat === "one" ? <Repeat1 className="h-5 w-5" /> : <Repeat className="h-5 w-5" />}
+            </button>
+          </div>
+
+          {/* Footer Controls */}
+          <div className="flex items-center justify-between px-2 mt-6 text-neutral-400">
+            <button className="hover:text-white transition-colors cursor-pointer p-1">
+              <Laptop2 className="h-5 w-5" />
+            </button>
+            <button className="hover:text-white transition-colors cursor-pointer p-1">
+              <Share2 className="h-5 w-5" />
+            </button>
+            <button 
+              onClick={() => {
+                setIsFullscreen(false)
+                setShowQueue(true)
+              }}
+              className="hover:text-white transition-colors cursor-pointer p-1"
+              aria-label="Ver cola de reproducción"
+            >
+              <ListMusic className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable lyrics section (deslizar hacia abajo) */}
+        <div className="px-6 pb-24 shrink-0">
+          <div className="rounded-2xl bg-black/45 border border-white/5 p-6 backdrop-blur-md">
+            <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+              <span className="text-xs uppercase tracking-widest font-extrabold text-[#1db954]">Letras</span>
+              <Mic2 className="h-4 w-4 text-[#1db954]" />
+            </div>
+
+            {/* Lyrics content */}
+            <div className="max-h-[300px] overflow-y-auto space-y-4 pr-1 text-sm font-semibold scrollbar-thin scrollbar-thumb-neutral-800">
+              {isLoadingLyrics ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-2 text-neutral-400">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="text-xs">Buscando letras...</span>
+                </div>
+              ) : lyrics.length > 0 ? (
+                lyrics.map((line, idx) => {
+                  const isActive = idx === activeIndex
+                  return (
+                    <p
+                      key={idx}
+                      className={cn(
+                        "transition-all duration-200 py-0.5",
+                        isActive ? "text-[#1db954] text-base font-extrabold" : "text-neutral-300"
+                      )}
+                    >
+                      {line.text}
+                    </p>
+                  )
+                })
+              ) : (
+                <p className="text-neutral-500 text-xs italic text-center py-8">
+                  Letras no disponibles para esta canción.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!isFullscreen || !currentTrack) return null
 
@@ -189,7 +477,7 @@ export function FullscreenView() {
             className="w-full flex-1 overflow-y-auto pr-2 scrollbar-none py-16 text-center select-none"
             style={{ maskImage: "linear-gradient(to bottom, transparent, white 25%, white 75%, transparent)" }}
           >
-            {isLoading ? (
+            {isLoadingLyrics ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-neutral-400">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
                 <p className="text-sm">Buscando letras en pantalla completa...</p>
@@ -256,6 +544,42 @@ export function FullscreenView() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function ProgressSlider({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number
+  onChange: (v: number) => void
+  disabled?: boolean
+}) {
+  return (
+    <div className="group relative flex h-4 flex-1 items-center select-none">
+      <div className="absolute inset-x-0 h-1 rounded-full bg-neutral-800">
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-foreground group-hover:bg-primary"
+          style={{ width: `${value}%` }}
+        />
+        <div
+          className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground opacity-0 group-hover:opacity-100"
+          style={{ left: `${value}%` }}
+        />
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={0.1}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-not-allowed"
+        aria-label="Seek"
+      />
     </div>
   )
 }

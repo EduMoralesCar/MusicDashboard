@@ -61,7 +61,7 @@ export function PlayerBar() {
     toggleVideo,
   } = usePlayer()
 
-  const { view, navigateTo, goBack, showQueue, setShowQueue, isFullscreen, setIsFullscreen } = useNavigation()
+  const { view, navigateTo, goBack, showQueue, setShowQueue, isFullscreen, setIsFullscreen, navigateToArtist } = useNavigation()
   const { isLiked, toggleLike } = useLiked()
   const liked = currentTrack ? isLiked(currentTrack.id) : false
   const cover =
@@ -122,7 +122,21 @@ export function PlayerBar() {
   const pct = duration > 0 ? (progress / duration) * 100 : 0
 
   return (
-    <footer className="relative flex h-20 w-full items-center gap-4 border-t border-border bg-card px-4 text-card-foreground">
+    <footer 
+      onClick={(e) => {
+        const target = e.target as HTMLElement
+        if (
+          window.innerWidth < 768 &&
+          !target.closest("button") &&
+          !target.closest("a") &&
+          !target.closest("input") &&
+          !target.closest("[role='menuitem']")
+        ) {
+          setIsFullscreen(true)
+        }
+      }}
+      className="relative flex h-20 w-full items-center gap-4 border-t border-border bg-card px-4 text-card-foreground cursor-pointer md:cursor-default"
+    >
       {/* 2px Progress Bar at the top of the player bar for mobile/desktop visual feedback */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-neutral-800">
         <div 
@@ -146,9 +160,29 @@ export function PlayerBar() {
                 />
               )}
             </div>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-medium">{currentTrack.title}</div>
-              <div className="truncate text-xs text-muted-foreground">{currentTrack.user.name}</div>
+            <div className="min-w-0 flex-1">
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (currentTrack.user?.id) {
+                    navigateToArtist(currentTrack.user.id.toString(), currentTrack.user.name)
+                  }
+                }}
+                className="truncate text-sm font-medium hover:underline hover:text-[#1db954] cursor-pointer"
+              >
+                {currentTrack.title}
+              </div>
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (currentTrack.user?.id) {
+                    navigateToArtist(currentTrack.user.id.toString(), currentTrack.user.name)
+                  }
+                }}
+                className="truncate text-xs text-muted-foreground hover:underline hover:text-white cursor-pointer"
+              >
+                {currentTrack.user.name}
+              </div>
             </div>
             <button
               onClick={() => currentTrack && toggleLike(currentTrack)}
