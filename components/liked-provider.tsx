@@ -5,8 +5,6 @@ import type { AudiusTrack } from "@/lib/audius"
 import { useAuth } from "./auth-provider"
 import { toast } from "sonner"
 
-const STORAGE_KEY = "eumora:liked-tracks:v1"
-
 interface LikedContextValue {
   liked: AudiusTrack[]
   likedIds: Set<string>
@@ -21,11 +19,17 @@ export function LikedProvider({ children }: { children: React.ReactNode }) {
   const [liked, setLiked] = useState<AudiusTrack[]>([])
   const [hydrated, setHydrated] = useState(false)
 
-  // 1. Initial Load: Load local tracks from localStorage on mount
+  // Get current storage key based on user session to avoid mixing tracks between accounts
+  const getStorageKey = useCallback((email?: string) => {
+    return email ? `eumora:liked-tracks:user:${email}` : "eumora:liked-tracks:guest"
+  }, [])
+
+  // 1. Initial Load: Load local tracks from localStorage on mount (starts as guest)
   useEffect(() => {
     if (typeof window === "undefined") return
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY)
+      const key = getStorageKey() // guest key by default
+      const raw = window.localStorage.getItem(key)
       if (raw) {
         const parsed = JSON.parse(raw) as AudiusTrack[]
         if (Array.isArray(parsed)) setLiked(parsed)
@@ -34,43 +38,81 @@ export function LikedProvider({ children }: { children: React.ReactNode }) {
       console.log("Error reading liked tracks from localStorage:", err)
     }
     setHydrated(true)
-  }, [])
+  }, [getStorageKey])
 
-  // 2. Cloud Sync: When user logs in/changes, merge with MongoDB
+  // 2. User Authentication and Sync
   useEffect(() => {
-    if (!hydrated || !user) return
+    if (!hydrated) return
 
-    const syncWithDb = async () => {
-      try {
-        const res = await fetch("/api/auth/liked-sync", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ likedTracks: liked }), // Send current local tracks to merge
-        })
-
-        if (res.ok) {
-          const data = await res.json()
-          // Update state and localStorage with the fully merged list from the cloud
-          setLiked(data.likedTracks)
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data.likedTracks))
+    const syncUserTracks = async () => {
+      if (user) {
+        // We are logged in. Check if there are any guest tracks to merge first.
+        let guestTracks: AudiusTrack[] = []
+        try {
+          const guestRaw = window.localStorage.getItem("eumora:liked-tracks:guest")
+          if (guestRaw) {
+            guestTracks = JSON.parse(guestRaw) as AudiusTrack[]
+          }
+        } catch (err) {
+          console.error("Error reading guest tracks:", err)
         }
-      } catch (err) {
-        console.error("Error syncing favorites with database:", err)
+
+        // If guest tracks exist, merge them with the cloud database account
+        if (guestTracks.length > 0) {
+          try {
+            const res = await fetch("/api/auth/liked-sync", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ likedTracks: guestTracks }),
+            })
+            if (res.ok) {
+              const data = await res.json()
+              setLiked(data.likedTracks)
+              window.localStorage.setItem(getStorageKey(user.email), JSON.stringify(data.likedTracks))
+              // Clear guest tracks after successful merge
+              window.localStorage.removeItem("eumora:liked-tracks:guest")
+              return
+            }
+          } catch (err) {
+            console.error("Error merging guest tracks:", err)
+          }
+        }
+
+        // Otherwise (or if merge failed), set tracks directly from user database profile
+        const userTracks = (user.likedTracks as unknown as AudiusTrack[]) || []
+        setLiked(userTracks)
+        window.localStorage.setItem(getStorageKey(user.email), JSON.stringify(userTracks))
+      } else {
+        // Logged out: Load guest local tracks
+        try {
+          const raw = window.localStorage.getItem("eumora:liked-tracks:guest")
+          if (raw) {
+            const parsed = JSON.parse(raw) as AudiusTrack[]
+            if (Array.isArray(parsed)) {
+              setLiked(parsed)
+              return
+            }
+          }
+        } catch (err) {
+          console.error("Error loading guest tracks on logout:", err)
+        }
+        setLiked([])
       }
     }
 
-    syncWithDb()
-  }, [user, hydrated])
+    syncUserTracks()
+  }, [user, hydrated, getStorageKey])
 
-  // 3. Keep local storage up to date for offline or fast-load access
-  const persistLocally = (newLiked: AudiusTrack[]) => {
+  // 3. Persist locally helper
+  const persistLocally = useCallback((newLiked: AudiusTrack[]) => {
     if (typeof window === "undefined") return
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(newLiked))
+      const key = getStorageKey(user?.email)
+      window.localStorage.setItem(key, JSON.stringify(newLiked))
     } catch (err) {
       console.error("Error persisting liked tracks locally:", err)
     }
-  }
+  }, [user, getStorageKey])
 
   const likedIds = useMemo(() => new Set(liked.filter(Boolean).map((t) => t.id)), [liked])
 
@@ -116,7 +158,7 @@ export function LikedProvider({ children }: { children: React.ReactNode }) {
         }
       }
     },
-    [liked, user]
+    [liked, user, persistLocally]
   )
 
   const value = useMemo<LikedContextValue>(
