@@ -95,8 +95,9 @@ export function TrackRow({ track, index, queue, showAlbum = true }: TrackRowProp
 
   return (
     <div
+      onClick={handlePlay}
       className={cn(
-        "group grid grid-cols-[16px_4fr_3fr_2fr_80px] items-center gap-4 rounded-md px-4 py-2 text-sm text-neutral-400 transition-colors hover:bg-neutral-800/40 select-none",
+        "group grid grid-cols-[16px_1fr_auto] md:grid-cols-[16px_4fr_3fr_2fr_100px] items-center gap-2 md:gap-4 rounded-md px-2 md:px-4 py-2 text-sm text-neutral-400 transition-colors hover:bg-neutral-800/40 select-none cursor-pointer",
         isCurrent && "bg-neutral-800/20"
       )}
     >
@@ -111,7 +112,10 @@ export function TrackRow({ track, index, queue, showAlbum = true }: TrackRowProp
           </span>
         )}
         <button
-          onClick={handlePlay}
+          onClick={(e) => {
+            e.stopPropagation()
+            handlePlay()
+          }}
           aria-label={showPause ? "Pausa" : "Reproducir"}
           className="hidden text-white group-hover:flex"
         >
@@ -161,7 +165,7 @@ export function TrackRow({ track, index, queue, showAlbum = true }: TrackRowProp
       </div>
 
       {/* Like + dropdown + duration */}
-      <div className="flex items-center justify-end gap-3 text-right">
+      <div className="flex items-center justify-end gap-2 md:gap-3 text-right">
         {/* Heart icon */}
         <button
           onClick={(e) => {
@@ -170,8 +174,8 @@ export function TrackRow({ track, index, queue, showAlbum = true }: TrackRowProp
           }}
           aria-label={liked ? "Remove from liked songs" : "Add to liked songs"}
           className={cn(
-            "opacity-0 transition-opacity hover:text-white group-hover:opacity-100",
-            liked && "text-[#1db954] opacity-100 hover:text-[#1db954]",
+            "md:opacity-0 transition-opacity hover:text-white md:group-hover:opacity-100 opacity-100 cursor-pointer",
+            liked ? "text-[#1db954] opacity-100 hover:text-[#1db954]" : "text-neutral-400",
           )}
         >
           <Heart className="h-4 w-4" fill={liked ? "currentColor" : "none"} />
@@ -184,8 +188,8 @@ export function TrackRow({ track, index, queue, showAlbum = true }: TrackRowProp
               <button
                 onClick={(e) => e.stopPropagation()}
                 className={cn(
-                  "opacity-0 transition-opacity hover:text-white group-hover:opacity-100 cursor-pointer text-neutral-400 hover:text-[#1db954]",
-                  playlists?.some(p => p.tracks?.some((t: any) => t && t.id === track.id)) && "text-[#1db954] opacity-100"
+                  "md:opacity-0 transition-opacity hover:text-white md:group-hover:opacity-100 opacity-100 cursor-pointer text-neutral-400 hover:text-[#1db954]",
+                  playlists?.some(p => p.tracks?.some((t: any) => t && t.id === track.id)) && "text-[#1db954] md:opacity-100 opacity-100"
                 )}
                 aria-label="Añadir a playlist"
               >
