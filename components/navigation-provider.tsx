@@ -17,6 +17,8 @@ interface NavigationContextValue {
   setShowQueue: (show: boolean) => void
   isFullscreen: boolean
   setIsFullscreen: (full: boolean) => void
+  searchQuery: string
+  setSearchQuery: (query: string) => void
 }
 
 const NavigationContext = createContext<NavigationContextValue | null>(null)
@@ -26,6 +28,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeName, setActiveName] = useState<string | null>(null)
   const [historyStack, setHistoryStack] = useState<{ view: View; id: string | null; name: string | null }[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
 
   const navigateTo = useCallback((newView: View, id: string | null = null, name: string | null = null) => {
     // Add current state to history stack before navigating
@@ -78,7 +81,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     showQueue,
     setShowQueue,
     isFullscreen,
-    setIsFullscreen
+    setIsFullscreen,
+    searchQuery,
+    setSearchQuery
   }
 
   return (

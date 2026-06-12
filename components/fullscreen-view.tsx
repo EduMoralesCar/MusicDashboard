@@ -33,8 +33,6 @@ export function FullscreenView() {
   const { isLiked, toggleLike } = useLiked()
 
   const [isMobile, setIsMobile] = useState(false)
-  const [showVideoOnMobile, setShowVideoOnMobile] = useState(false)
-
   // Track window size to adapt layout dynamically
   useEffect(() => {
     const checkMobile = () => {
@@ -44,11 +42,6 @@ export function FullscreenView() {
     window.addEventListener("resize", checkMobile)
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
-
-  // Reset video mode when track changes
-  useEffect(() => {
-    setShowVideoOnMobile(false)
-  }, [currentTrack])
   
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const videoPlaceholderRef = useRef<HTMLDivElement>(null)
@@ -110,7 +103,7 @@ export function FullscreenView() {
 
   // Track video dimensions if view === "video" in fullscreen
   useEffect(() => {
-    if (view !== "video" && !(isMobile && showVideoOnMobile)) {
+    if (view !== "video" && !(isMobile && showVideo)) {
       return
     }
 
@@ -204,7 +197,7 @@ export function FullscreenView() {
 
           {/* Album Cover or Video Placeholder */}
           <div className="flex-1 my-6 flex items-center justify-center">
-            {showVideoOnMobile ? (
+            {showVideo ? (
               /* Video Container */
               <div
                 ref={videoPlaceholderRef}
@@ -216,7 +209,7 @@ export function FullscreenView() {
                 </div>
                 {/* Floating button to switch back to cover */}
                 <button
-                  onClick={() => setShowVideoOnMobile(false)}
+                  onClick={toggleVideo}
                   className="absolute bottom-3 right-3 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 border border-white/10 cursor-pointer shadow-md transition-colors"
                   aria-label="Ver carátula"
                 >
@@ -233,7 +226,7 @@ export function FullscreenView() {
                 />
                 {/* Floating button to switch to video if supported */}
                 <button
-                  onClick={() => setShowVideoOnMobile(true)}
+                  onClick={toggleVideo}
                   className="absolute bottom-3 right-3 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 border border-white/10 cursor-pointer shadow-md transition-colors animate-pulse"
                   aria-label="Ver video"
                 >

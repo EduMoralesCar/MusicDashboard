@@ -12,6 +12,8 @@ import { SkeletonCard, SkeletonRow } from "./skeletons"
 import { usePlayer } from "./player-provider"
 import { cn } from "@/lib/utils"
 
+import { useNavigation } from "./navigation-provider"
+
 function useDebounced<T>(value: T, delay = 350): T {
   const [debounced, setDebounced] = useState(value)
   useEffect(() => {
@@ -22,7 +24,7 @@ function useDebounced<T>(value: T, delay = 350): T {
 }
 
 export function SearchView() {
-  const [query, setQuery] = useState("")
+  const { searchQuery: query, setSearchQuery: setQuery } = useNavigation()
   const debounced = useDebounced(query, 350)
   const hasQuery = debounced.trim().length > 0
 

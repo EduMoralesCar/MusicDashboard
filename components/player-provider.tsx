@@ -456,6 +456,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       {/* Premium Video Container - floating element bottom-left corner or expanded in lyrics/video */}
       <div
         onDoubleClick={() => {
+          if (window.innerWidth < 768) return
           if (view === "video") {
             goBack()
           } else {
@@ -469,7 +470,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
             : "opacity-0 scale-95 pointer-events-none"
         )}
         style={
-          showVideo && currentTrack && (view === "lyrics" || view === "video") && videoDimensions
+          showVideo && currentTrack && videoDimensions
             ? {
                 left: `${videoDimensions.left}px`,
                 top: `${videoDimensions.top}px`,
