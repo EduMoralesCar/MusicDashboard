@@ -141,7 +141,7 @@ export function FullscreenView() {
       window.removeEventListener("resize", updateDimensions)
       setVideoDimensions(null)
     }
-  }, [view, setVideoDimensions, isFullscreen])
+  }, [view, setVideoDimensions, isFullscreen, isMobile, showVideo])
 
   // Generate dynamic background gradient
   const backgroundGradient = useMemo(() => {
