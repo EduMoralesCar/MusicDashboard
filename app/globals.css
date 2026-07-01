@@ -92,3 +92,48 @@
     height: 0;
   }
 }
+
+/* Custom 3D & Animation utilities */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(3deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes float-reverse {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(12px) rotate(-4deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes gradient-bg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-float-slow {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 10s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 25s linear infinite;
+}
+
+.bg-mesh {
+  background: radial-gradient(at 10% 20%, rgba(29, 185, 84, 0.15) 0px, transparent 50%),
+              radial-gradient(at 90% 10%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+              radial-gradient(at 50% 80%, rgba(29, 185, 84, 0.08) 0px, transparent 50%),
+              radial-gradient(at 80% 90%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
+  background-size: 200% 200%;
+  animation: gradient-bg 15s ease infinite;
+}
