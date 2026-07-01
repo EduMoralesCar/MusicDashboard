@@ -301,10 +301,18 @@ export default function AuthPage() {
       <div className="grid grid-cols-1 md:grid-cols-12 w-full min-h-screen">
         
         {/* Left Side: Form Column */}
-        <div className="col-span-1 md:col-span-5 flex flex-col justify-center bg-[#0a0a0c] px-8 sm:px-16 md:px-12 lg:px-16 xl:px-24 py-12 z-20 border-r border-white/5">
-          
+        <div className="relative col-span-1 md:col-span-5 flex flex-col justify-center bg-[#0a0a0c] px-8 sm:px-16 md:px-12 lg:px-16 xl:px-24 py-12 z-20 border-r border-white/5 overflow-hidden">
+          {/* Subtle background image to tie both panels together cohesively */}
+          <img 
+            src="/hands_banner.jpg" 
+            alt="Eumora Music Background Logo" 
+            className="absolute inset-0 w-full h-full object-cover opacity-25 filter blur-[4px] brightness-[0.25] scale-105 select-none pointer-events-none z-0"
+          />
+          {/* Solid gradient cover overlay to ensure inputs and text have maximum readability */}
+          <div className="absolute inset-0 bg-[#0a0a0c]/85 z-10 pointer-events-none" />
+
           {/* Brand Logo Header */}
-          <div className="flex items-center gap-3 mb-10 select-none">
+          <div className="relative flex items-center gap-3 mb-10 select-none z-20">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1db954]">
               <Music2 className="h-5 w-5 text-black" fill="currentColor" />
             </div>
@@ -316,7 +324,7 @@ export default function AuthPage() {
           {/* Form Content Wrapper with transition */}
           <div 
             className={cn(
-              "transition-all duration-200 ease-out",
+              "relative transition-all duration-200 ease-out z-20",
               isTransitioning ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
             )}
           >
