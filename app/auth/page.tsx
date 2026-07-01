@@ -309,7 +309,7 @@ export default function AuthPage() {
               <Music2 className="h-5 w-5 text-black" fill="currentColor" />
             </div>
             <span className="text-xl font-black tracking-tight text-white">
-              Eumora<span className="text-[#1db954]">Music</span>
+              Eumora <span className="text-[#1db954]">Music</span>
             </span>
           </div>
 
@@ -635,14 +635,14 @@ export default function AuthPage() {
 
         {/* Right Side: Visual Banner Column (Hidden on mobile) */}
         <div className="relative hidden md:flex md:col-span-7 flex-col justify-between p-16 overflow-hidden bg-black select-none z-10">
-          {/* High-quality background image asset */}
+          {/* High-quality background image asset (Hands green wallpaper) */}
           <img 
-            src="/auth_banner.png" 
+            src="/hands_banner.jpg" 
             alt="Eumora Music Premium Banner" 
-            className="absolute inset-0 w-full h-full object-cover opacity-75"
+            className="absolute inset-0 w-full h-full object-cover opacity-75 filter blur-[3px] brightness-[0.45] scale-105"
           />
           {/* Subtle gradient overlay to make text highly readable */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#070708] via-black/30 to-black/10 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-black/45 to-black/10 z-10" />
 
           {/* Premium Tag Badge */}
           <div className="z-20 flex items-center gap-2 bg-black/45 backdrop-blur-md px-4.5 py-2 rounded-full border border-white/5 self-start shadow-xl">
@@ -650,8 +650,8 @@ export default function AuthPage() {
             <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-200">Experiencia Premium</span>
           </div>
 
-          {/* Large Slogan/Quote Block */}
-          <div className="z-20 max-w-xl space-y-4">
+          {/* Large Slogan/Quote Block wrapped in blurred glassmorphic card */}
+          <div className="z-20 max-w-xl space-y-4 bg-black/30 backdrop-blur-md p-8 rounded-2xl border border-white/5 shadow-2xl">
             <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
               Siente el ritmo,<br />vive la música.
             </h2>
