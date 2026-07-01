@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   description: 'Un clon de Spotify premium libre y sin anuncios, potenciado por la API de Audius.',
   generator: 'v0.app',
   icons: {
-    icon: '/app_icon.jpg',
-    apple: '/app_icon.jpg',
+    icon: '/app_icon.png',
+    apple: '/app_icon.png',
   },
 }
 

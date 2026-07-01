@@ -306,16 +306,18 @@ export default function AuthPage() {
           <img 
             src="/hands_banner.jpg" 
             alt="Eumora Music Background Logo" 
-            className="absolute inset-0 w-full h-full object-cover opacity-25 filter blur-[4px] brightness-[0.25] scale-105 select-none pointer-events-none z-0"
+            className="absolute inset-0 w-full h-full object-cover opacity-15 filter brightness-[0.25] select-none pointer-events-none z-0"
           />
           {/* Solid gradient cover overlay to ensure inputs and text have maximum readability */}
           <div className="absolute inset-0 bg-[#0a0a0c]/85 z-10 pointer-events-none" />
 
           {/* Brand Logo Header */}
           <div className="relative flex items-center gap-3 mb-10 select-none z-20">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1db954]">
-              <Music2 className="h-5 w-5 text-black" fill="currentColor" />
-            </div>
+            <img 
+              src="/app_icon.png" 
+              alt="Eumora Music Logo" 
+              className="h-10 w-10 rounded-full object-cover border border-white/10 shadow-md"
+            />
             <span className="text-xl font-black tracking-tight text-white">
               Eumora <span className="text-[#1db954]">Music</span>
             </span>
@@ -647,7 +649,7 @@ export default function AuthPage() {
           <img 
             src="/hands_banner.jpg" 
             alt="Eumora Music Premium Banner" 
-            className="absolute inset-0 w-full h-full object-cover opacity-75 filter blur-[3px] brightness-[0.45] scale-105"
+            className="absolute inset-0 w-full h-full object-cover opacity-75 filter brightness-[0.45]"
           />
           {/* Subtle gradient overlay to make text highly readable */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-black/45 to-black/10 z-10" />
