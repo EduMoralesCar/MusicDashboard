@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { 
-  Music2, Mail, Lock, User as UserIcon, ShieldCheck, 
+  Mail, Lock, User as UserIcon, ShieldCheck, 
   ArrowLeft, Loader2, KeyRound, Eye, EyeOff 
 } from "lucide-react"
 import { toast } from "sonner"
@@ -11,6 +11,31 @@ import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
 
 type AuthState = "login" | "register" | "verify" | "forgot" | "reset"
+
+const SUBTITLES = {
+  login: [
+    "Inicia sesión para acceder a tus playlists y biblioteca de música.",
+    "Escucha a tus artistas favoritos sin anuncios y sin límites.",
+    "Toda tu biblioteca personal en la nube, siempre sincronizada."
+  ],
+  register: [
+    "Crea una cuenta gratis en segundos y siente el verdadero ritmo.",
+    "Únete a una comunidad musical sin restricciones ni comerciales.",
+    "Sube tus canciones favoritas y arma tus colecciones en alta calidad."
+  ],
+  verify: [
+    "Introduce el código de 6 dígitos que te enviamos al correo.",
+    "Si no configuraste el SMTP, revisa el log en la consola del servidor."
+  ],
+  forgot: [
+    "Introduce tu correo electrónico registrado para recuperar el acceso.",
+    "Te enviaremos un código de un solo uso para verificar tu cuenta."
+  ],
+  reset: [
+    "Establece una nueva contraseña de seguridad para ingresar.",
+    "Recuerda usar una combinación de letras y números para mayor seguridad."
+  ]
+}
 
 export default function AuthPage() {
   const router = useRouter()
@@ -21,6 +46,10 @@ export default function AuthPage() {
   // Smooth form transitions
   const [isTransitioning, setIsTransitioning] = useState(false)
 
+  // Subtitle Carousel state
+  const [subtitleIndex, setSubtitleIndex] = useState(0)
+  const [fadeSubtitle, setFadeSubtitle] = useState(true)
+
   // Redirect to home if user is already logged in
   useEffect(() => {
     if (!authLoading && user) {
@@ -28,6 +57,27 @@ export default function AuthPage() {
     }
   }, [user, authLoading, router])
   
+  // Subtitle Carousel rotation
+  useEffect(() => {
+    setSubtitleIndex(0)
+    setFadeSubtitle(true)
+  }, [state])
+
+  useEffect(() => {
+    const list = SUBTITLES[state] || SUBTITLES.login
+    if (list.length <= 1) return
+
+    const interval = setInterval(() => {
+      setFadeSubtitle(false)
+      setTimeout(() => {
+        setSubtitleIndex((prev) => (prev + 1) % list.length)
+        setFadeSubtitle(true)
+      }, 250)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [state])
+
   // Form values
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
@@ -43,7 +93,7 @@ export default function AuthPage() {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [resending, setResending] = useState(false)
 
-  // Clear states when transitioning views to prevent carry-over of stale codes or passwords
+  // Clear states when transitioning views
   const changeState = (newState: AuthState) => {
     setIsTransitioning(true)
     setTimeout(() => {
@@ -58,7 +108,7 @@ export default function AuthPage() {
     }, 200)
   }
 
-  // Redirect if flowEmail is lost (e.g., page reload or manual URL access)
+  // Redirect if flowEmail is lost
   useEffect(() => {
     if (state === "reset" && !flowEmail) {
       changeState("forgot")
@@ -316,7 +366,7 @@ export default function AuthPage() {
             <img 
               src="/app_icon.png" 
               alt="Eumora Music Logo" 
-              className="h-10 w-10 rounded-full object-cover border border-white/10 shadow-md"
+              className="h-10 w-10 rounded-full object-cover border border-white/10 shadow-md logo-glow-anim select-none pointer-events-none"
             />
             <span className="text-xl font-black tracking-tight text-white">
               Eumora <span className="text-[#1db954]">Music</span>
@@ -339,13 +389,16 @@ export default function AuthPage() {
                 {state === "forgot" && "¿Olvidaste tu contraseña?"}
                 {state === "reset" && "Nueva contraseña"}
               </h2>
-              <p className="text-xs text-neutral-400 leading-relaxed font-medium">
-                {state === "login" && "Inicia sesión para acceder a tus playlists y biblioteca de música."}
-                {state === "register" && "Regístrate en segundos y comienza a escuchar música sin límites."}
-                {state === "verify" && `Hemos enviado un código de seguridad OTP de 6 dígitos a ${flowEmail}.`}
-                {state === "forgot" && "Ingresa tu correo electrónico para enviarte un código de recuperación."}
-                {state === "reset" && `Ingresa el código que te enviamos a ${flowEmail} y tu nueva clave.`}
-              </p>
+              <div className="min-h-[48px]">
+                <p 
+                  className={cn(
+                    "text-xs text-neutral-400 leading-relaxed font-medium transition-all duration-300 select-none",
+                    fadeSubtitle ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"
+                  )}
+                >
+                  {(SUBTITLES[state] || SUBTITLES.login)[subtitleIndex]}
+                </p>
+              </div>
             </div>
 
             {/* LOGIN VIEW */}
@@ -360,7 +413,7 @@ export default function AuthPage() {
                       placeholder="ejemplo@correo.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-4 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10"
+                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-4 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 hover:border-neutral-700/80 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10 focus:shadow-[0_0_20px_rgba(29,185,84,0.1)]"
                       required
                     />
                   </div>
@@ -372,7 +425,7 @@ export default function AuthPage() {
                     <button
                       type="button"
                       onClick={() => changeState("forgot")}
-                      className="text-[10.5px] font-bold text-[#1db954] hover:text-[#1ed760] transition-colors"
+                      className="text-[10.5px] font-bold text-[#1db954] hover:text-[#1ed760] transition-colors link-underline"
                     >
                       ¿La olvidaste?
                     </button>
@@ -384,7 +437,7 @@ export default function AuthPage() {
                       placeholder="Ingresa tu contraseña"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-10.5 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10"
+                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-10.5 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 hover:border-neutral-700/80 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10 focus:shadow-[0_0_20px_rgba(29,185,84,0.1)]"
                       required
                     />
                     <button
@@ -400,7 +453,7 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-3 flex w-full items-center justify-center rounded-xl bg-[#1db954] py-3.5 text-xs font-extrabold text-black transition-all duration-200 hover:bg-[#1ed760] active:scale-[0.99] disabled:opacity-75 cursor-pointer shadow-md shadow-[#1db954]/10"
+                  className="mt-3 flex w-full items-center justify-center rounded-xl bg-[#1db954] py-3.5 text-xs font-extrabold text-black transition-all duration-200 hover:bg-[#1ed760] hover:shadow-[0_0_25px_rgba(29,185,84,0.3)] active:scale-[0.99] disabled:opacity-75 cursor-pointer shadow-md shadow-[#1db954]/10 animate-shimmer"
                 >
                   {loading ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : "Iniciar Sesión"}
                 </button>
@@ -410,7 +463,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => changeState("register")}
-                    className="font-bold text-white hover:text-[#1db954] hover:underline"
+                    className="font-bold text-white hover:text-[#1db954] transition-colors link-underline"
                   >
                     Regístrate gratis
                   </button>
@@ -430,7 +483,7 @@ export default function AuthPage() {
                       placeholder="Tu nombre o apodo"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-4 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10"
+                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-4 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 hover:border-neutral-700/80 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10 focus:shadow-[0_0_20px_rgba(29,185,84,0.1)]"
                       required
                     />
                   </div>
@@ -445,7 +498,7 @@ export default function AuthPage() {
                       placeholder="ejemplo@correo.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-4 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10"
+                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-4 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 hover:border-neutral-700/80 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10 focus:shadow-[0_0_20px_rgba(29,185,84,0.1)]"
                       required
                     />
                   </div>
@@ -460,7 +513,7 @@ export default function AuthPage() {
                       placeholder="Mínimo 6 caracteres"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-10.5 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10"
+                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-10.5 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 hover:border-neutral-700/80 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10 focus:shadow-[0_0_20px_rgba(29,185,84,0.1)]"
                       required
                     />
                     <button
@@ -476,7 +529,7 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-3 flex w-full items-center justify-center rounded-xl bg-[#1db954] py-3.5 text-xs font-extrabold text-black transition-all duration-200 hover:bg-[#1ed760] active:scale-[0.99] disabled:opacity-75 cursor-pointer shadow-md shadow-[#1db954]/10"
+                  className="mt-3 flex w-full items-center justify-center rounded-xl bg-[#1db954] py-3.5 text-xs font-extrabold text-black transition-all duration-200 hover:bg-[#1ed760] hover:shadow-[0_0_25px_rgba(29,185,84,0.3)] active:scale-[0.99] disabled:opacity-75 cursor-pointer shadow-md shadow-[#1db954]/10 animate-shimmer"
                 >
                   {loading ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : "Crear Cuenta"}
                 </button>
@@ -486,7 +539,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => changeState("login")}
-                    className="font-bold text-white hover:text-[#1db954] hover:underline"
+                    className="font-bold text-white hover:text-[#1db954] transition-colors link-underline"
                   >
                     Inicia sesión
                   </button>
@@ -500,7 +553,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => changeState("register")}
-                  className="flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer self-start"
+                  className="flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer self-start link-underline"
                 >
                   <ArrowLeft className="h-4 w-4" /> Volver al registro
                 </button>
@@ -527,7 +580,7 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 flex w-full items-center justify-center rounded-xl bg-[#1db954] py-3.5 text-xs font-extrabold text-black transition-all duration-200 hover:bg-[#1ed760] active:scale-[0.99] disabled:opacity-75 cursor-pointer shadow-md shadow-[#1db954]/10"
+                  className="mt-2 flex w-full items-center justify-center rounded-xl bg-[#1db954] py-3.5 text-xs font-extrabold text-black transition-all duration-200 hover:bg-[#1ed760] hover:shadow-[0_0_25px_rgba(29,185,84,0.3)] active:scale-[0.99] disabled:opacity-75 cursor-pointer shadow-md shadow-[#1db954]/10 animate-shimmer"
                 >
                   {loading ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : "Verificar e Ingresar"}
                 </button>
@@ -538,7 +591,7 @@ export default function AuthPage() {
                     type="button"
                     onClick={handleResendOtp}
                     disabled={resending || loading}
-                    className="font-bold text-white hover:text-[#1db954] hover:underline disabled:opacity-50 transition-colors"
+                    className="font-bold text-white hover:text-[#1db954] hover:underline disabled:opacity-50 transition-colors link-underline"
                   >
                     {resending ? "Reenviando..." : "Reenviar código"}
                   </button>
@@ -552,7 +605,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => changeState("login")}
-                  className="flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer self-start"
+                  className="flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer self-start link-underline"
                 >
                   <ArrowLeft className="h-4 w-4" /> Volver al login
                 </button>
@@ -566,7 +619,7 @@ export default function AuthPage() {
                       placeholder="ejemplo@correo.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-4 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10"
+                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-4 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 hover:border-neutral-700/80 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10 focus:shadow-[0_0_20px_rgba(29,185,84,0.1)]"
                       required
                     />
                   </div>
@@ -575,7 +628,7 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 flex w-full items-center justify-center rounded-xl bg-[#1db954] py-3.5 text-xs font-extrabold text-black transition-all duration-200 hover:bg-[#1ed760] active:scale-[0.99] disabled:opacity-75 cursor-pointer shadow-md shadow-[#1db954]/10"
+                  className="mt-2 flex w-full items-center justify-center rounded-xl bg-[#1db954] py-3.5 text-xs font-extrabold text-black transition-all duration-200 hover:bg-[#1ed760] hover:shadow-[0_0_25px_rgba(29,185,84,0.3)] active:scale-[0.99] disabled:opacity-75 cursor-pointer shadow-md shadow-[#1db954]/10 animate-shimmer"
                 >
                   {loading ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : "Enviar Código"}
                 </button>
@@ -588,7 +641,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => changeState("forgot")}
-                  className="flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer self-start"
+                  className="flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer self-start link-underline"
                 >
                   <ArrowLeft className="h-4 w-4" /> Cambiar correo
                 </button>
@@ -618,7 +671,7 @@ export default function AuthPage() {
                       placeholder="Mínimo 6 caracteres"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-10.5 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10"
+                      className="w-full rounded-xl border border-neutral-800 bg-[#121214] py-3.5 pr-10.5 pl-10.5 text-xs text-white placeholder-neutral-500 outline-none transition-all duration-200 hover:border-neutral-700/80 focus:border-[#1db954] focus:bg-[#151518] focus:ring-2 focus:ring-[#1db954]/10 focus:shadow-[0_0_20px_rgba(29,185,84,0.1)]"
                       required
                     />
                     <button
@@ -634,7 +687,7 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-3 flex w-full items-center justify-center rounded-xl bg-[#1db954] py-3.5 text-xs font-extrabold text-black transition-all duration-200 hover:bg-[#1ed760] active:scale-[0.99] disabled:opacity-75 cursor-pointer shadow-md shadow-[#1db954]/10"
+                  className="mt-3 flex w-full items-center justify-center rounded-xl bg-[#1db954] py-3.5 text-xs font-extrabold text-black transition-all duration-200 hover:bg-[#1ed760] hover:shadow-[0_0_25px_rgba(29,185,84,0.3)] active:scale-[0.99] disabled:opacity-75 cursor-pointer shadow-md shadow-[#1db954]/10 animate-shimmer"
                 >
                   {loading ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : "Restablecer e Iniciar Sesión"}
                 </button>
