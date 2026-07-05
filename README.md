@@ -6,12 +6,11 @@
   <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
 </div>
 
-<h1 align="center" style="background: linear-gradient(90deg, #1DB954, #191414); -webkit-background-clip: text; color: transparent;">
+<h1 align="center">
   <img src="https://cdn-icons-png.flaticon.com/512/174/174872.png" width="30" alt="Spotify Icon" />
   EUMORA MUSIC
 </h1>
-
-
+<h3 align="center">Tu soundtrack, poco a poco...</h3>
 
 <p align="center">
   Plataforma web moderna y robusta inspirada en Spotify para la reproducción de música completa oficial, gestión de playlists en tiempo real y visualización de videoclips sincronizados en un panel flotante.
