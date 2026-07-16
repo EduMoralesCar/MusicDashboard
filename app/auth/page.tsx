@@ -39,7 +39,7 @@ const SUBTITLES = {
 
 export default function AuthPage() {
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, refreshUser } = useAuth()
   const [state, setState] = useState<AuthState>("login")
   const [loading, setLoading] = useState(false)
 
@@ -177,9 +177,9 @@ export default function AuthPage() {
       if (data.token) {
         localStorage.setItem("eumora_session_token", data.token)
       }
+      await refreshUser()
       toast.success("¡Bienvenido de vuelta a Eumora Music!")
       router.push("/")
-      router.refresh()
     } catch (err) {
       toast.error("Error de conexión con el servidor.")
     } finally {
@@ -254,9 +254,9 @@ export default function AuthPage() {
       if (data.token) {
         localStorage.setItem("eumora_session_token", data.token)
       }
+      await refreshUser()
       toast.success(data.message)
       router.push("/")
-      router.refresh()
     } catch (err) {
       toast.error("Error de conexión con el servidor.")
     } finally {
@@ -326,9 +326,9 @@ export default function AuthPage() {
       if (data.token) {
         localStorage.setItem("eumora_session_token", data.token)
       }
+      await refreshUser()
       toast.success(data.message)
       router.push("/")
-      router.refresh()
     } catch (err) {
       toast.error("Error de conexión con el servidor.")
     } finally {
