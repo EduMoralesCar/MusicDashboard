@@ -524,7 +524,7 @@ export function FullscreenView() {
         {view === "lyrics" ? (
           <div
             ref={scrollContainerRef}
-            className="w-full flex-1 overflow-y-auto pr-2 scrollbar-none py-16 text-center select-none mt-20"
+            className="w-full flex-1 overflow-y-auto pr-2 scrollbar-none pt-16 pb-32 text-center select-none mt-20"
             style={{ maskImage: "linear-gradient(to bottom, transparent, white 20%, white 80%, transparent)" }}
           >
             {isLoadingLyrics ? (
@@ -599,6 +599,95 @@ export function FullscreenView() {
           </div>
         )}
       </div>
+
+      {/* Bottom Floating Player Controls */}
+      <footer
+        className={cn(
+          "fixed bottom-0 left-0 right-0 z-50 flex flex-col gap-3 bg-black/85 backdrop-blur-lg border-t border-white/5 px-8 py-4 shadow-2xl transition-all duration-300 ease-in-out",
+          showControls ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
+        )}
+      >
+        {/* Progress bar */}
+        <div className="flex items-center gap-3 w-full max-w-3xl mx-auto text-xs font-semibold">
+          <span className="text-neutral-400 tabular-nums">{formatDuration(progress)}</span>
+          <ProgressSlider
+            value={pct}
+            onChange={(p) => seek((p / 100) * trackDuration)}
+            disabled={!currentTrack}
+          />
+          <span className="text-neutral-400 tabular-nums">{formatDuration(trackDuration)}</span>
+        </div>
+
+        {/* Control buttons */}
+        <div className="flex items-center justify-center gap-6 w-full max-w-xl mx-auto">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleShuffle()
+            }}
+            className={cn(
+              "transition-colors hover:text-white cursor-pointer p-2",
+              shuffle ? "text-[#1db954] font-bold" : "text-neutral-400"
+            )}
+            aria-label="Reproducción aleatoria"
+          >
+            <Shuffle className="h-5 w-5" />
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              previous()
+            }}
+            disabled={!currentTrack}
+            className="text-neutral-400 hover:text-white active:scale-95 disabled:opacity-40 transition-all cursor-pointer p-2"
+            aria-label="Canción anterior"
+          >
+            <SkipBack className="h-5 w-5" />
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              togglePlay()
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-black hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer shrink-0"
+            aria-label={isPlaying ? "Pausar" : "Reproducir"}
+          >
+            {isPlaying ? (
+              <Pause className="h-5 w-5" fill="currentColor" />
+            ) : (
+              <Play className="h-5 w-5 fill-current ml-0.5" />
+            )}
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              next()
+            }}
+            disabled={!currentTrack}
+            className="text-neutral-400 hover:text-white active:scale-95 disabled:opacity-40 transition-all cursor-pointer p-2"
+            aria-label="Siguiente canción"
+          >
+            <SkipForward className="h-5 w-5" />
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              cycleRepeat()
+            }}
+            className={cn(
+              "transition-colors hover:text-white cursor-pointer p-2 relative",
+              repeat !== "off" ? "text-[#1db954]" : "text-neutral-400"
+            )}
+            aria-label="Repetir"
+          >
+            {repeat === "one" ? <Repeat1 className="h-5 w-5" /> : <Repeat className="h-5 w-5" />}
+          </button>
+        </div>
+      </footer>
     </div>
   )
 }
