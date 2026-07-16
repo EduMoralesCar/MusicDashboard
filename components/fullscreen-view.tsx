@@ -212,7 +212,7 @@ export function FullscreenView() {
     return (
       <div
         className={cn(
-          "fixed inset-0 z-[60] flex flex-col bg-gradient-to-b overflow-y-auto text-white select-none scrollbar-none",
+          "fixed inset-0 z-[80] flex flex-col bg-gradient-to-b overflow-y-auto text-white select-none scrollbar-none",
           backgroundGradient
         )}
       >
@@ -452,12 +452,21 @@ export function FullscreenView() {
 
   return (
     <div
+      onDoubleClick={() => {
+        if (view === "video") {
+          setIsFullscreen(false)
+        }
+      }}
+      onClick={() => {
+        setShowControls((prev) => !prev)
+      }}
       className={cn(
-        "fixed inset-0 z-[60] flex flex-col bg-gradient-to-b transition-all duration-700 ease-out text-white select-none overflow-hidden",
-        backgroundGradient,
+        "fixed inset-0 z-[80] flex flex-col transition-all duration-700 ease-out text-white select-none overflow-hidden",
+        view === "lyrics" ? backgroundGradient : "bg-transparent",
         !showControls && "cursor-none"
       )}
     >
+
       {/* Top Header controls (Fixed and Floating) */}
       <header
         className={cn(
