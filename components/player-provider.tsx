@@ -176,6 +176,36 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     lastTapRef.current = now
   }
 
+  // Keep music playing when switching browser tabs (prevent automatic tab background suspension)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    let activeTimeout: any = null
+
+    const handleVisibilityChange = () => {
+      const player = playerRef.current
+      if (document.visibilityState === "hidden" && isPlaying) {
+        // Wait briefly for YT/browser visibility throttling to pause, then override and force resume
+        activeTimeout = setTimeout(() => {
+          if (player && typeof player.playVideo === "function") {
+            const state = player.getPlayerState?.()
+            // 2 = PAUSED, 3 = BUFFERING, -1 = UNSTARTED, 0 = ENDED
+            if (state === 2 || state === 3 || state === -1) {
+              player.playVideo()
+            }
+          }
+        }, 200)
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      if (activeTimeout) clearTimeout(activeTimeout)
+    }
+  }, [isPlaying])
+
+
 
   const setVideoDimensions = useCallback((dims: { top: number; left: number; width: number; height: number } | null) => {
     setVideoDimensionsState((prev) => {
