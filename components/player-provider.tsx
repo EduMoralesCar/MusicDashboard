@@ -5,6 +5,7 @@ import type { AudiusTrack } from "@/lib/audius"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { useNavigation } from "./navigation-provider"
+import { X } from "lucide-react"
 
 interface PlayerContextValue {
   currentTrack: AudiusTrack | null
@@ -60,6 +61,121 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [sleepTimerDuration, setSleepTimerDuration] = useState<number | null>(null)
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number | null>(null)
   const [videoDimensions, setVideoDimensionsState] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
+
+  // Mobile/Desktop Drag-to-Dismiss and Double-Tap Fullscreen States
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [isHoveringDismiss, setIsHoveringDismiss] = useState(false)
+
+  const dragStartRef = useRef({ x: 0, y: 0 })
+  const currentOffsetRef = useRef({ x: 0, y: 0 })
+  const lastTapRef = useRef<number>(0)
+
+  // Keep ref synchronized with state to read current offset inside global listeners
+  useEffect(() => {
+    currentOffsetRef.current = dragOffset
+  }, [dragOffset])
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    if (view === "video") return // Disable dragging in fullscreen view
+    
+    // Ignore right click
+    if ("button" in e && e.button !== 0) return
+
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY
+
+    dragStartRef.current = { x: clientX, y: clientY }
+    setIsDragging(true)
+  }
+
+  const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!isDragging) return
+
+    // Prevent default scrolling on mobile when dragging the video window
+    if (e.cancelable) {
+      e.preventDefault()
+    }
+
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY
+
+    const dx = clientX - dragStartRef.current.x
+    const dy = clientY - dragStartRef.current.y
+
+    const newOffset = {
+      x: currentOffsetRef.current.x + dx,
+      y: currentOffsetRef.current.y + dy
+    }
+
+    setDragOffset(newOffset)
+    dragStartRef.current = { x: clientX, y: clientY }
+
+    // Distance calculation for Dismiss X Circle bottom center
+    const defaultX = 16
+    const defaultY = window.innerHeight - 231
+    const newX = defaultX + newOffset.x
+    const newY = defaultY + newOffset.y
+    const boundX = Math.max(8, Math.min(newX, window.innerWidth - 240 - 8))
+    const boundY = Math.max(8, Math.min(newY, window.innerHeight - 135 - 8))
+
+    const videoCenterX = boundX + 120
+    const videoCenterY = boundY + 67.5
+
+    const targetX = window.innerWidth / 2
+    const targetY = window.innerHeight - 64
+
+    const dist = Math.sqrt(Math.pow(videoCenterX - targetX, 2) + Math.pow(videoCenterY - targetY, 2))
+    setIsHoveringDismiss(dist < 100)
+  }, [isDragging])
+
+  const handleDragEnd = useCallback(() => {
+    if (!isDragging) return
+    setIsDragging(false)
+
+    if (isHoveringDismiss) {
+      setShowVideo(false)
+      // Reset position
+      setDragOffset({ x: 0, y: 0 })
+    }
+    setIsHoveringDismiss(false)
+  }, [isDragging, isHoveringDismiss])
+
+  // Attach dynamic window event listeners during active dragging
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", handleDragMove, { passive: false })
+      window.addEventListener("mouseup", handleDragEnd)
+      window.addEventListener("touchmove", handleDragMove, { passive: false })
+      window.addEventListener("touchend", handleDragEnd)
+    } else {
+      window.removeEventListener("mousemove", handleDragMove)
+      window.removeEventListener("mouseup", handleDragEnd)
+      window.removeEventListener("touchmove", handleDragMove)
+      window.removeEventListener("touchend", handleDragEnd)
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleDragMove)
+      window.removeEventListener("mouseup", handleDragEnd)
+      window.removeEventListener("touchmove", handleDragMove)
+      window.removeEventListener("touchend", handleDragEnd)
+    }
+  }, [isDragging, handleDragMove, handleDragEnd])
+
+  const handleTouchStartTap = () => {
+    const now = Date.now()
+    if (now - lastTapRef.current < 300) {
+      // Double tap detected on mobile!
+      if (view === "video") {
+        goBack()
+      } else {
+        navigateTo("video")
+      }
+    }
+    lastTapRef.current = now
+  }
+
 
   const setVideoDimensions = useCallback((dims: { top: number; left: number; width: number; height: number } | null) => {
     setVideoDimensionsState((prev) => {
@@ -455,8 +571,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       {children}
       {/* Premium Video Container - floating element bottom-left corner or expanded in lyrics/video */}
       <div
+        onMouseDown={handleDragStart}
+        onTouchStart={(e) => {
+          handleDragStart(e)
+          handleTouchStartTap()
+        }}
         onDoubleClick={() => {
-          if (window.innerWidth < 768) return
           if (view === "video") {
             goBack()
           } else {
@@ -464,39 +584,66 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           }
         }}
         className={cn(
-          "fixed z-[70] overflow-hidden rounded-xl border border-neutral-800 bg-black shadow-2xl transition-all duration-500 cursor-pointer select-none",
+          "fixed z-[70] overflow-hidden rounded-xl border border-neutral-800 bg-black shadow-2xl select-none",
           showVideo && currentTrack
             ? "opacity-100 scale-100 pointer-events-auto"
-            : "opacity-0 scale-95 pointer-events-none"
+            : "opacity-0 scale-95 pointer-events-none",
+          isDragging ? "cursor-grabbing border-[#1db954]/40 shadow-[#1db954]/5" : "cursor-grab hover:border-neutral-700"
         )}
-        style={
-          showVideo && currentTrack && videoDimensions
-            ? {
-                left: `${videoDimensions.left}px`,
-                top: `${videoDimensions.top}px`,
-                width: `${videoDimensions.width}px`,
-                height: `${videoDimensions.height}px`,
-                borderRadius: "12px",
-              }
-            : showVideo && currentTrack
-            ? {
-                left: "16px",
-                top: "calc(100vh - 231px)",
-                width: "240px",
-                height: "135px",
-                borderRadius: "12px",
-              }
-            : {
-                left: "16px",
-                top: "calc(100vh - 96px)",
-                width: "0px",
-                height: "0px",
-                borderRadius: "12px",
-              }
-        }
+        style={(() => {
+          if (showVideo && currentTrack && videoDimensions) {
+            return {
+              left: `${videoDimensions.left}px`,
+              top: `${videoDimensions.top}px`,
+              width: `${videoDimensions.width}px`,
+              height: `${videoDimensions.height}px`,
+              borderRadius: "12px",
+            }
+          }
+          if (showVideo && currentTrack) {
+            const defaultX = 16
+            const defaultY = window.innerHeight - 231
+            const newX = defaultX + dragOffset.x
+            const newY = defaultY + dragOffset.y
+            const boundX = Math.max(8, Math.min(newX, window.innerWidth - 240 - 8))
+            const boundY = Math.max(8, Math.min(newY, window.innerHeight - 135 - 8))
+            
+            return {
+              left: `${boundX}px`,
+              top: `${boundY}px`,
+              width: "240px",
+              height: "135px",
+              borderRadius: "12px",
+              transform: isHoveringDismiss ? "scale(0.8)" : "scale(1)",
+              transition: isDragging ? "transform 0.15s ease" : "left 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.2s ease, opacity 0.3s ease, scale 0.3s ease",
+            }
+          }
+          return {
+            left: "16px",
+            top: "calc(100vh - 96px)",
+            width: "0px",
+            height: "0px",
+            borderRadius: "12px",
+          }
+        })()}
       >
         <div id="yt-player" className="h-full w-full rounded-xl pointer-events-none" />
       </div>
+
+      {/* Dismiss target for drag-to-close gesture */}
+      {isDragging && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[80] flex flex-col items-center gap-2.5 animate-in fade-in slide-in-from-bottom-6 duration-200 select-none pointer-events-none">
+          <div className={cn(
+            "flex h-16 w-16 items-center justify-center rounded-full bg-red-600/75 backdrop-blur-md border border-red-500 text-white shadow-2xl transition-all duration-200",
+            isHoveringDismiss ? "scale-125 bg-red-600 border-red-400 shadow-red-500/50" : "scale-100"
+          )}>
+            <X className={cn("h-7 w-7", isHoveringDismiss ? "scale-110" : "animate-pulse")} />
+          </div>
+          <span className="text-[10px] font-extrabold text-red-500 uppercase tracking-widest bg-black/80 px-4 py-1.5 rounded-full border border-white/5 shadow-md">
+            Soltar para cerrar
+          </span>
+        </div>
+      )}
     </PlayerContext.Provider>
   )
 }
