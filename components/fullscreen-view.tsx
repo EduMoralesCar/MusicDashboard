@@ -462,7 +462,7 @@ export function FullscreenView() {
       }}
       className={cn(
         "fixed inset-0 z-[80] flex flex-col transition-all duration-700 ease-out text-white select-none overflow-hidden",
-        view === "lyrics" ? backgroundGradient : "bg-transparent",
+        view === "lyrics" ? `bg-gradient-to-b ${backgroundGradient}` : "bg-transparent",
         !showControls && "cursor-none"
       )}
     >
