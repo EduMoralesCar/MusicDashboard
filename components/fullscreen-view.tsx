@@ -591,10 +591,10 @@ export function FullscreenView() {
           </div>
         ) : (
           /* Video Fullscreen View - 100% Borderless Immersive Iframe */
-          <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
+          <div className="absolute inset-0 w-full h-full bg-transparent flex items-center justify-center pointer-events-none">
             <div
               ref={videoPlaceholderRef}
-              className="w-full h-full relative bg-black"
+              className="w-full h-full relative bg-transparent pointer-events-none"
             >
               {isLoading && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 gap-3 text-neutral-400">
