@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useMemo, useState } from "react"
+import { useEffect, useRef, useMemo, useState, useCallback } from "react"
 import { usePlayer } from "./player-provider"
 import { useNavigation } from "./navigation-provider"
 import { useLiked } from "./liked-provider"
@@ -46,6 +46,51 @@ export function FullscreenView() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const videoPlaceholderRef = useRef<HTMLDivElement>(null)
   const lineRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  const [showControls, setShowControls] = useState(true)
+  const controlsTimeoutRef = useRef<any>(null)
+
+  const resetControlsTimer = useCallback(() => {
+    setShowControls(true)
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current)
+    }
+    controlsTimeoutRef.current = setTimeout(() => {
+      setShowControls(false)
+    }, 3000)
+  }, [])
+
+  useEffect(() => {
+    if (!isFullscreen) return
+
+    resetControlsTimer()
+
+    const handleMouseMove = () => {
+      resetControlsTimer()
+    }
+
+    const handleTouchStart = () => {
+      setShowControls((prev) => {
+        if (!prev) {
+          resetControlsTimer()
+          return true
+        } else {
+          if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current)
+          return false
+        }
+      })
+    }
+
+    window.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("touchstart", handleTouchStart)
+    
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("touchstart", handleTouchStart)
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current)
+    }
+  }, [isFullscreen, resetControlsTimer])
+
 
   // Close fullscreen on Escape key
   useEffect(() => {
@@ -408,14 +453,20 @@ export function FullscreenView() {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[60] flex flex-col bg-gradient-to-b px-8 py-8 transition-all duration-700 ease-out text-white select-none",
-        backgroundGradient
+        "fixed inset-0 z-[60] flex flex-col bg-gradient-to-b transition-all duration-700 ease-out text-white select-none overflow-hidden",
+        backgroundGradient,
+        !showControls && "cursor-none"
       )}
     >
-      {/* Top Header controls */}
-      <div className="flex items-center justify-between w-full border-b border-white/5 pb-4 mb-6">
+      {/* Top Header controls (Fixed and Floating) */}
+      <header
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 flex items-center justify-between w-full border-b border-white/5 bg-black/85 backdrop-blur-lg px-8 py-3.5 shadow-2xl transition-all duration-300 ease-in-out",
+          showControls ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+        )}
+      >
         <div className="flex items-center gap-3">
-          <div className="relative h-10 w-10 overflow-hidden rounded bg-neutral-900 shadow">
+          <div className="relative h-10 w-10 overflow-hidden rounded bg-neutral-900 shadow border border-white/5">
             {currentTrack.artwork?.["150x150"] && (
               <img
                 src={currentTrack.artwork["150x150"]}
@@ -424,9 +475,9 @@ export function FullscreenView() {
               />
             )}
           </div>
-          <div>
-            <h2 className="text-sm font-bold text-white leading-none">{currentTrack.title}</h2>
-            <p className="text-xs text-neutral-400 mt-1">{currentTrack.user?.name}</p>
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold text-white leading-none truncate max-w-[200px] sm:max-w-[350px]">{currentTrack.title}</h2>
+            <p className="text-xs text-neutral-400 mt-1 truncate max-w-[200px] sm:max-w-[350px]">{currentTrack.user?.name}</p>
           </div>
         </div>
 
@@ -434,8 +485,11 @@ export function FullscreenView() {
           {/* Toggle View button */}
           {showVideo && (
             <button
-              onClick={() => navigateTo(view === "lyrics" ? "video" : "lyrics")}
-              className="px-4 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 transition-all rounded-full border border-white/10 flex items-center gap-2 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation()
+                navigateTo(view === "lyrics" ? "video" : "lyrics")
+              }}
+              className="px-4 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 transition-all rounded-full border border-white/10 flex items-center gap-2 cursor-pointer shadow-lg hover:scale-105 active:scale-95"
             >
               {view === "lyrics" ? (
                 <>
@@ -453,22 +507,25 @@ export function FullscreenView() {
 
           {/* Minimize / Exit button */}
           <button
-            onClick={() => setIsFullscreen(false)}
-            className="p-2 text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsFullscreen(false)
+            }}
+            className="p-2 text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors cursor-pointer hover:scale-105 active:scale-95 border border-white/5"
             aria-label="Salir de pantalla completa"
           >
             <Minimize2 className="h-4 w-4" />
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col items-center justify-center overflow-hidden w-full max-w-5xl mx-auto">
+      <div className="flex-1 flex flex-col items-center justify-center overflow-hidden w-full h-full relative">
         {view === "lyrics" ? (
           <div
             ref={scrollContainerRef}
-            className="w-full flex-1 overflow-y-auto pr-2 scrollbar-none py-16 text-center select-none"
-            style={{ maskImage: "linear-gradient(to bottom, transparent, white 25%, white 75%, transparent)" }}
+            className="w-full flex-1 overflow-y-auto pr-2 scrollbar-none py-16 text-center select-none mt-20"
+            style={{ maskImage: "linear-gradient(to bottom, transparent, white 20%, white 80%, transparent)" }}
           >
             {isLoadingLyrics ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-neutral-400">
@@ -476,7 +533,7 @@ export function FullscreenView() {
                 <p className="text-sm">Buscando letras en pantalla completa...</p>
               </div>
             ) : lyrics.length > 0 ? (
-              <div className="flex flex-col gap-8 py-32 max-w-3xl mx-auto">
+              <div className="flex flex-col gap-8 py-32 max-w-3xl mx-auto px-6">
                 {lyrics.map((line, idx) => {
                   const isActive = idx === activeIndex
                   const isPast = idx < activeIndex
@@ -498,7 +555,10 @@ export function FullscreenView() {
                       ref={(el) => {
                         lineRefs.current[idx] = el
                       }}
-                      onClick={() => seek(line.time)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        seek(line.time)
+                      }}
                       className={cn(
                         "w-full text-center text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight transition-all duration-300 py-2 focus:outline-none cursor-pointer hover:scale-105 hover:text-white block",
                         isActive
@@ -521,18 +581,20 @@ export function FullscreenView() {
             )}
           </div>
         ) : (
-          /* Video Fullscreen View */
-          <div className="w-full h-full flex items-center justify-center py-6">
+          /* Video Fullscreen View - 100% Borderless Immersive Iframe */
+          <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
             <div
               ref={videoPlaceholderRef}
-              className="relative w-full aspect-video max-h-[75vh] max-w-5xl rounded-2xl bg-black/60 border border-white/5 flex items-center justify-center overflow-hidden shadow-2xl transition-all duration-300"
+              className="w-full h-full relative bg-black"
             >
-              <div className="flex flex-col items-center gap-3 text-neutral-400">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="text-xs uppercase tracking-widest font-bold text-neutral-500">
-                  Cargando reproductor de video en pantalla completa...
-                </span>
-              </div>
+              {isLoading && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 gap-3 text-neutral-400">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="text-xs uppercase tracking-widest font-bold text-neutral-500">
+                    Cargando reproductor de video en pantalla completa...
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         )}
