@@ -25,7 +25,7 @@ const SUBTITLES = {
   ],
   verify: [
     "Introduce el código de 6 dígitos que te enviamos al correo.",
-    "Si no configuraste el SMTP, revisa el log en la consola del servidor."
+    "Si no lo encuentras, revisa tu carpeta de correo no deseado o spam."
   ],
   forgot: [
     "Introduce tu correo electrónico registrado para recuperar el acceso.",
@@ -573,7 +573,7 @@ export default function AuthPage() {
                     />
                   </div>
                   <p className="text-[11px] text-neutral-500 leading-relaxed font-medium">
-                    Si no configuraste el SMTP de correo, el código OTP se imprimirá directamente en la consola del servidor de Node.
+                    El código de un solo uso vence en 10 minutos y garantiza que tu cuenta es real y segura.
                   </p>
                 </div>
 
