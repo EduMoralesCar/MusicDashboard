@@ -18,6 +18,7 @@ import {
   Laptop2,
   Smartphone,
   Speaker,
+  Bluetooth,
   Maximize2,
   Tv,
   PlusCircle,
@@ -73,6 +74,28 @@ export function PlayerBar() {
     null
 
   const { user } = useAuth()
+
+  const isNativeMobile = typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform()
+
+  const handleScanBluetooth = async () => {
+    if (typeof navigator !== "undefined" && (navigator as any).bluetooth) {
+      try {
+        toast.info("Buscando altavoces o auriculares Bluetooth...")
+        const device = await (navigator as any).bluetooth.requestDevice({
+          acceptAllDevices: true
+        })
+        toast.success(`Conectado exitosamente a: ${device.name || "Altavoz Bluetooth"}`)
+      } catch (err: any) {
+        if (err.name === "NotFoundError" || err.message?.includes("User cancelled")) {
+          toast.dismiss()
+        } else {
+          toast.error("Error al conectar: " + err.message)
+        }
+      }
+    } else {
+      toast.error("Tu navegador no soporta Bluetooth directo. Prueba usando Google Chrome o Edge.")
+    }
+  }
 
   // Fetch playlists from MongoDB using SWR
   const { data: playlists } = useSWR<any[]>(
@@ -379,43 +402,66 @@ export function PlayerBar() {
               <Laptop2 className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 bg-[#18181b] border-neutral-800 text-white p-2">
+          <DropdownMenuContent align="end" className="w-68 bg-[#18181b] border-neutral-800 text-white p-2">
             <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
               Conectar a un dispositivo
             </div>
             <DropdownMenuSeparator className="bg-neutral-800" />
             
+            {/* Active Device */}
             <DropdownMenuItem className="flex items-center justify-between focus:bg-neutral-800 focus:text-white cursor-pointer py-2 rounded-lg">
               <div className="flex items-center gap-2">
-                <Laptop2 className="h-4 w-4 text-[#1db954]" />
+                {isNativeMobile ? (
+                  <Smartphone className="h-4 w-4 text-[#1db954]" />
+                ) : (
+                  <Laptop2 className="h-4 w-4 text-[#1db954]" />
+                )}
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-[#1db954]">Este dispositivo</span>
-                  <span className="text-[10px] text-[#1db954]">Navegador Web</span>
+                  <span className="text-xs font-semibold text-[#1db954]">
+                    {isNativeMobile ? "Este celular" : "Este navegador"}
+                  </span>
+                  <span className="text-[10px] text-[#1db954]/80">
+                    {isNativeMobile ? "Aplicación Móvil (Capacitor)" : "Navegador Web"}
+                  </span>
                 </div>
               </div>
               <div className="h-2 w-2 rounded-full bg-[#1db954] animate-pulse" />
             </DropdownMenuItem>
             
+            {/* Inactive Companion Device */}
             <DropdownMenuItem className="flex items-center justify-between focus:bg-neutral-800 focus:text-white cursor-pointer py-2 rounded-lg opacity-60 hover:opacity-100 transition-opacity">
               <div className="flex items-center gap-2">
-                <Smartphone className="h-4 w-4 text-neutral-300" />
+                {isNativeMobile ? (
+                  <Laptop2 className="h-4 w-4 text-neutral-300" />
+                ) : (
+                  <Smartphone className="h-4 w-4 text-neutral-300" />
+                )}
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold">Celular de Edu</span>
-                  <span className="text-[10px] text-neutral-400">Aplicación Móvil (Capacitor)</span>
+                  <span className="text-xs font-semibold">
+                    {isNativeMobile
+                      ? `Dispositivo de ${user?.username || "Usuario"}`
+                      : `Celular de ${user?.username || "Usuario"}`}
+                  </span>
+                  <span className="text-[10px] text-neutral-400">
+                    {isNativeMobile ? "Sesión Web activa" : "Aplicación Móvil (Capacitor)"}
+                  </span>
                 </div>
               </div>
               <div className="h-2 w-2 rounded-full bg-neutral-600" />
             </DropdownMenuItem>
 
-            <DropdownMenuItem className="flex items-center justify-between focus:bg-neutral-800 focus:text-white cursor-pointer py-2 rounded-lg opacity-60 hover:opacity-100 transition-opacity">
-              <div className="flex items-center gap-2">
-                <Speaker className="h-4 w-4 text-neutral-300" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-semibold">Altavoz Eumora</span>
-                  <span className="text-[10px] text-neutral-400">AirPlay / Bluetooth</span>
-                </div>
+            <DropdownMenuSeparator className="bg-neutral-800" />
+
+            {/* Bluetooth Scan Button */}
+            <DropdownMenuItem
+              onClick={handleScanBluetooth}
+              className="flex items-center gap-2 focus:bg-[#1db954]/20 focus:text-[#1db954] cursor-pointer py-2 rounded-lg text-[#1db954] font-semibold"
+            >
+              <Bluetooth className="h-4 w-4 animate-bounce" />
+              <div className="flex flex-col">
+                <span className="text-xs font-bold">Vincular Altavoz Bluetooth...</span>
+                <span className="text-[9px] text-[#1db954]/75">Buscar parlantes o audífonos</span>
               </div>
-              <div className="h-2 w-2 rounded-full bg-neutral-600" />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
