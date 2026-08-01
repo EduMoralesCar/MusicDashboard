@@ -16,6 +16,8 @@ import {
   Mic2,
   ListMusic,
   Laptop2,
+  Smartphone,
+  Speaker,
   Maximize2,
   Tv,
   PlusCircle,
@@ -368,12 +370,55 @@ export function PlayerBar() {
         >
           <ListMusic className="h-4 w-4" />
         </button>
-        <button
-          aria-label="Devices"
-          className="hidden text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
-        >
-          <Laptop2 className="h-4 w-4" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              aria-label="Devices"
+              className="hidden text-muted-foreground transition-colors hover:text-foreground md:inline-flex cursor-pointer"
+            >
+              <Laptop2 className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64 bg-[#18181b] border-neutral-800 text-white p-2">
+            <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+              Conectar a un dispositivo
+            </div>
+            <DropdownMenuSeparator className="bg-neutral-800" />
+            
+            <DropdownMenuItem className="flex items-center justify-between focus:bg-neutral-800 focus:text-white cursor-pointer py-2 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Laptop2 className="h-4 w-4 text-[#1db954]" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold text-[#1db954]">Este dispositivo</span>
+                  <span className="text-[10px] text-[#1db954]">Navegador Web</span>
+                </div>
+              </div>
+              <div className="h-2 w-2 rounded-full bg-[#1db954] animate-pulse" />
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem className="flex items-center justify-between focus:bg-neutral-800 focus:text-white cursor-pointer py-2 rounded-lg opacity-60 hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-2">
+                <Smartphone className="h-4 w-4 text-neutral-300" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold">Celular de Edu</span>
+                  <span className="text-[10px] text-neutral-400">Aplicación Móvil (Capacitor)</span>
+                </div>
+              </div>
+              <div className="h-2 w-2 rounded-full bg-neutral-600" />
+            </DropdownMenuItem>
+
+            <DropdownMenuItem className="flex items-center justify-between focus:bg-neutral-800 focus:text-white cursor-pointer py-2 rounded-lg opacity-60 hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-2">
+                <Speaker className="h-4 w-4 text-neutral-300" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold">Altavoz Eumora</span>
+                  <span className="text-[10px] text-neutral-400">AirPlay / Bluetooth</span>
+                </div>
+              </div>
+              <div className="h-2 w-2 rounded-full bg-neutral-600" />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <div className="flex items-center gap-2">
           <button
             onClick={toggleMute}
