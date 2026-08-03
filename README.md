@@ -50,12 +50,12 @@ El proyecto utiliza una arquitectura moderna y escalable que se conecta a MongoD
 - **Rediseño & Fallbacks HD:** Inicio dinámico con biblioteca de usuario personalizada y sistema inteligente de fallbacks en alta resolución para imágenes de portadas y perfiles.
 
 
-### ☁️ Playlists y Personalización en la Nube
+### Playlists y Personalización en la Nube
 - **Gestión de Playlists (CRUD):** Crea playlists personalizadas en tiempo real desde la barra lateral.
 - **Menús Contextuales:** Añade o elimina pistas desde cualquier sección de la app (Home, Búsquedas, Álbumes o Artistas) y almacénalas en tu cuenta.
 - **Sincronización de Favoritos (Liked Songs):** Canciones marcadas con "me gusta" guardadas de forma segura en tu perfil de MongoDB.
 
-### 👤 Navegación Dinámica e Interactiva
+### Navegación Dinámica e Interactiva
 - **Perfiles de Artista:** Con banners en alta definición, insignia de verificación, oyentes mensuales reales, top 5 de canciones populares y cuadrícula de álbumes oficiales.
 - **Vistas de Álbum:** Cabeceras detalladas con portada del disco, año de lanzamiento, cantidad de pistas y el tracklist oficial listo para reproducir.
 
