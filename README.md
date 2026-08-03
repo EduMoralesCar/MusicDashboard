@@ -39,11 +39,11 @@ A diferencia de clones convencionales que solo reproducen cortos de 30 segundos,
 
 El proyecto utiliza una arquitectura moderna y escalable que se conecta a MongoDB Atlas para garantizar la persistencia de perfiles, favoritos y playlists personalizadas creadas por cada usuario.
 
-### 🔒 Acceso y Registro Seguro
+### Acceso y Registro Seguro
 - **Middleware & JWT:** Todo el sistema se encuentra protegido por un middleware de Next.js. El acceso a la biblioteca y reproductor requiere sesión activa.
 - **Seguridad por OTP (Verificación Real):** Registro de usuarios y recuperación de contraseñas validados mediante códigos de un solo uso (OTP) enviados directamente a correos reales por SMTP (compatible con Gmail y Resend).
 
-### 🎵 Reproductor de Música Premium
+### Reproductor de Música Premium
 - **Música Completa y Oficial:** Escucha canciones comerciales originales completas mediante el reproductor de YouTube sincronizado en segundo plano, en lugar de demos recortadas.
 - **Modo Video Clip ("Videoclip Flotante"):** Un elegante panel flotante expandible y colapsable en la barra lateral inferior que reproduce el videoclip oficial de YouTube en sincronía con el reproductor de música.
 - **Letras Sincronizadas (Scroll Interactivo):** Panel interactivo con letras sincronizadas en tiempo real que se desplazan de forma automática. Cuenta con sistema *click-to-seek* para saltar a cualquier segundo de la canción haciendo clic sobre su verso.
