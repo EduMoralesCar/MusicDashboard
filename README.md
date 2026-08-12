@@ -27,7 +27,7 @@
 
 ---
 
-## 🌟 Sobre el Proyecto
+## Sobre el Proyecto
 
 **Eumora Music** es una plataforma musical premium construida al estilo de Spotify, desarrollada como un proyecto académico avanzado de alto impacto utilizando **Next.js 16 (App Router)**, **React 19**, **TypeScript** y **MongoDB Atlas**. 
 
@@ -35,7 +35,7 @@ A diferencia de clones convencionales que solo reproducen cortos de 30 segundos,
 
 ---
 
-## ✨ Funcionalidades Principales
+## Funcionalidades Principales
 
 El proyecto utiliza una arquitectura moderna y escalable que se conecta a MongoDB Atlas para garantizar la persistencia de perfiles, favoritos y playlists personalizadas creadas por cada usuario.
 
@@ -61,7 +61,7 @@ El proyecto utiliza una arquitectura moderna y escalable que se conecta a MongoD
 
 ---
 
-## 🔑 Credenciales de Acceso (Demo)
+## Credenciales de Acceso (Demo)
 
 Puedes ingresar al demo en vivo registrándote directamente con tu correo electrónico o utilizando credenciales de prueba que crees tú mismo.
 
@@ -69,7 +69,7 @@ Puedes ingresar al demo en vivo registrándote directamente con tu correo electr
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript.
 - **Estilos:** TailwindCSS 4, Componentes UI basados en Radix UI.
@@ -81,7 +81,7 @@ Puedes ingresar al demo en vivo registrándote directamente con tu correo electr
 
 ---
 
-## 🚀 Despliegue Local (Para Desarrolladores)
+## Despliegue Local (Para Desarrolladores)
 
 Si deseas clonar el proyecto y correrlo en tu máquina:
 
